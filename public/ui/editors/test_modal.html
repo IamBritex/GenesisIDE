@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<window-config>
+    <layout width="420" height="auto" />
+    <behavior draggable="true" />
+    <controls close="true" minimize="true" />
+    <title>Nueva Entidad</title>
+
+    <style>
+        /* Estilos específicos para este modal */
+        .modal-container {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 5px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #aaa;
+            margin-left: 2px;
+        }
+
+        .custom-input {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 8px 10px;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .custom-input:focus {
+            border-color: #5b9bd5;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #333;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        .btn-cancel {
+            background: transparent;
+            color: #aaa;
+            border: 1px solid #444;
+        }
+
+        .btn-confirm {
+            background: #5b9bd5;
+            color: white;
+            font-weight: 600;
+        }
+    </style>
+</window-config>
+
+<body>
+    <div class="modal-container">
+        <div style="margin-bottom: 5px;">
+            <p style="margin: 0; font-size: 0.9rem; opacity: 0.7;">Configura los parámetros de la nueva entidad.</p>
+        </div>
+
+        <div class="input-group">
+            <label for="entityName">Nombre Identificador</label>
+            <input type="text" id="entityName" class="custom-input" placeholder="ej. boyfriend_pixel" autofocus>
+        </div>
+
+        <div class="input-group">
+            <label for="entityType">Tipo de Objeto</label>
+            <select id="entityType" class="custom-input">
+                <option value="sprite">Sprite 2D</option>
+                <option value="spine">Animación Spine</option>
+                <option value="text">Texto</option>
+            </select>
+        </div>
+
+        <div class="modal-footer">
+            <button id="btnCancel" class="btn btn-cancel">Cancelar</button>
+            <button id="btnSave" class="btn btn-confirm">Crear Entidad</button>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            // Referencias
+            // NOTA: En un entorno real de 'ModularWindow', estos IDs son globales,
+            // asegúrate de que no choquen si abres dos ventanas iguales.
+            const btnSave = document.getElementById('btnSave');
+            const btnCancel = document.getElementById('btnCancel');
+            const nameInput = document.getElementById('entityName');
+            const typeInput = document.getElementById('entityType');
+
+            // Función para cerrar buscando el contenedor .modular-window
+            const closeWindow = () => {
+                // Buscamos el botón "X" que genera ModularWindow y le hacemos click
+                const myWindow = btnSave.closest('.modular-window');
+                if (myWindow) {
+                    const closeBtn = myWindow.querySelector('.win-btn.close');
+                    if (closeBtn) closeBtn.click();
+                }
+            };
+
+            btnSave.onclick = () => {
+                const name = nameInput.value.trim();
+                const type = typeInput.value;
+
+                if (!name) {
+                    nameInput.style.borderColor = '#ff5555';
+                    nameInput.focus();
+                    return;
+                }
+
+                console.log(`[Modal] Creando: ${name} (Tipo: ${type})`);
+
+                // Emitimos evento para que el IDE.js lo capture
+                const event = new CustomEvent('modal-save', {
+                    detail: { name, type }
+                });
+                window.dispatchEvent(event);
+
+                closeWindow();
+            };
+
+            btnCancel.onclick = closeWindow;
+
+            nameInput.oninput = () => {
+                nameInput.style.borderColor = '';
+            };
+        })();
+    </script>
+</body>
+
+</html>

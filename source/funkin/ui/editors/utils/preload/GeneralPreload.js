@@ -1,0 +1,20 @@
+/**
+ * source/funkin/ui/editors/utils/preload/GeneralPreload.js
+ * Clase estática para gestionar la precarga de recursos comunes del editor.
+ */
+export class GeneralPreload {
+    /**
+     * Carga los assets básicos (imágenes, sonidos, estilos) en la escena dada.
+     * @param {Phaser.Scene} scene La escena que está realizando el preload.
+     */
+    static preload(scene) {
+        scene.load.image('menuDesat', 'public/images/menu/bg/menuDesat.png');
+        scene.load.audio('clickDown', 'public/sounds/editor/ClickDown.ogg');
+        scene.load.audio('clickUp', 'public/sounds/editor/ClickUp.ogg');
+        scene.load.audio('undo', 'public/sounds/editor/undo.ogg');
+        scene.load.audio('chartEditorLoop', 'public/music/chartEditorLoop.ogg');
+
+        scene.load.text('uiCss', 'public/ui/ui.css');
+        scene.load.text('modalHtml', 'public/ui/editors/test_modal.html');
+    }
+}

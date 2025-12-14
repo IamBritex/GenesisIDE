@@ -1,0 +1,85 @@
+/* public/ui/styles/forms.css */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-group label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.custom-input {
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-main);
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    outline: none;
+    font-family: inherit;
+    font-size: 14px;
+    box-shadow: var(--shadow-input);
+    transition: all 0.2s ease;
+}
+
+.custom-input:focus {
+    background-color: #000;
+    border-color: #666;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 20px;
+}
+
+.btn {
+    padding: 0 24px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    /* Evitar outline visual al hacer clic */
+    outline: none;
+}
+
+.btn-cancel {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+}
+
+.btn-cancel:hover {
+    color: var(--text-main);
+    background-color: var(--bg-hover);
+}
+
+.btn-confirm {
+    background-color: var(--accent-color);
+    color: var(--accent-inverse);
+    border: 1px solid var(--accent-color);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-confirm:hover {
+    background-color: #e0e0e0;
+    transform: translateY(-2px);
+}
+
+.btn-confirm:active {
+    transform: translateY(0);
+    background-color: #ccc;
+}

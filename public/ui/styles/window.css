@@ -1,0 +1,119 @@
+/* public/ui/styles/window.css */
+.modular-window {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-window);
+    border-radius: var(--radius-main);
+    box-shadow: var(--shadow-window);
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+
+    animation: window-entry var(--anim-speed) var(--anim-ease) forwards;
+
+    transition: height var(--anim-speed) var(--anim-ease),
+        opacity var(--anim-speed) ease,
+        transform 0.2s ease,
+        border-color 0.2s ease;
+    will-change: height, transform;
+}
+
+.modular-window.closing {
+    animation: window-exit 0.2s ease forwards;
+    pointer-events: none;
+}
+
+.window-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 42px;
+    padding: 0 16px;
+    background-color: var(--bg-header);
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: grab;
+    user-select: none;
+    flex-shrink: 0;
+}
+
+.window-header:active {
+    cursor: grabbing;
+    background-color: #222;
+}
+
+.window-title {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 0.2s;
+}
+
+.modular-window:hover .window-title {
+    color: var(--text-main);
+}
+
+.window-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    height: 100%;
+}
+
+.win-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    /* IMPORTANT: Esto ayuda visualmente, pero el JS hará el trabajo funcional */
+    outline: none;
+}
+
+.win-btn img {
+    width: 16px;
+    height: 16px;
+    filter: invert(1) brightness(10);
+    opacity: 0.8;
+    transition: opacity 0.2s;
+    pointer-events: none;
+}
+
+.win-btn:hover {
+    background-color: var(--bg-hover);
+    transform: scale(1.05);
+}
+
+.win-btn:hover img {
+    opacity: 1;
+}
+
+.win-btn.close:hover {
+    background-color: #333;
+}
+
+.win-btn:active {
+    transform: scale(0.95);
+}
+
+.modal-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px;
+    height: 100%;
+    box-sizing: border-box;
+    transition: opacity 0.2s ease;
+    opacity: 1;
+}
+
+.modular-window.minimized .modal-container {
+    opacity: 0;
+    pointer-events: none;
+}

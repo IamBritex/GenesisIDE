@@ -1,0 +1,31 @@
+/* public/ui/styles/variables.css */
+@font-face {
+    font-family: 'VCR';
+    /* Ajusta la ruta si es necesario (subir 3 niveles desde styles/) */
+    src: url('../../../public/fonts/vcr.ttf') format('truetype');
+}
+
+:root {
+    --bg-window: #111111;
+    --bg-header: #1a1a1a;
+    --bg-input: #050505;
+    --bg-hover: #2a2a2a;
+
+    --border-subtle: #333333;
+
+    --text-main: #ffffff;
+    --text-muted: #888888;
+
+    --accent-color: #ffffff;
+    --accent-inverse: #000000;
+
+    --font-main: 'VCR', monospace;
+    --radius-main: 8px;
+    --radius-sm: 4px;
+
+    --shadow-window: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    --shadow-input: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+
+    --anim-speed: 0.3s;
+    --anim-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
