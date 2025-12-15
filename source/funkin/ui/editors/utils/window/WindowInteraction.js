@@ -1,26 +1,45 @@
 /**
  * source/funkin/ui/editors/utils/window/WindowInteraction.js
  */
+import WindowDragger from './WindowDragger.js';
+import WindowResizer from './WindowResizer.js';
+
 export default class WindowInteraction {
-    constructor(scene, windowNode, config, callbacks) {
+    constructor(scene, windowNode, config, callbacks, focusCallback, occupancyChecker) {
         this.scene = scene;
         this.windowNode = windowNode;
         this.config = config;
         this.callbacks = callbacks || {};
+        this.focusCallback = focusCallback;
+        this.occupancyChecker = occupancyChecker;
+        this.domContainer = null;
 
         this.state = {
             isDragging: false,
+            isResizing: false,
             isMinimized: false,
-            isDocked: false,
-            dragOffset: { x: 0, y: 0 },
-            scale: { x: 1, y: 1 },
-            lastHeight: 0
+            originalHeight: null,
+            originalWidth: null,
+            lastHeight: 0,
+            dockSide: null
         };
 
-        this._bindEvents();
+        this.resizer = new WindowResizer(scene, windowNode, this.state, this.bringToFront.bind(this), config);
+        this.dragger = new WindowDragger(scene, windowNode, config, this.state, {
+            ...this.callbacks,
+            onDragEnd: (e) => {
+                this._onDockStateChange();
+                if (this.callbacks.onDragEnd) this.callbacks.onDragEnd(e);
+            }
+        },
+            this.bringToFront.bind(this),
+            this
+        );
+
+        this._bindGeneralEvents();
     }
 
-    _bindEvents() {
+    _bindGeneralEvents() {
         const header = this.windowNode.querySelector('.window-header');
         if (header) {
             header.addEventListener('click', (e) => {
@@ -32,105 +51,92 @@ export default class WindowInteraction {
             });
         }
 
-        if (this.config.draggable) {
-            const handle = this.windowNode.querySelector('.window-drag-handle');
-            if (handle) {
-                this._dragBinds = {
-                    start: this._onDragStart.bind(this),
-                    move: this._onDragMove.bind(this),
-                    end: this._onDragEnd.bind(this)
-                };
-                handle.addEventListener('mousedown', this._dragBinds.start);
-                window.addEventListener('mousemove', this._dragBinds.move);
-                window.addEventListener('mouseup', this._dragBinds.end);
-            }
-        }
-
-        this.windowNode.addEventListener('mousedown', (e) => {
+        const stopProp = (e) => {
             e.stopPropagation();
             this.bringToFront();
-        });
+        };
 
-        this.windowNode.addEventListener('wheel', e => e.stopPropagation());
+        this.windowNode.addEventListener('mousedown', stopProp);
+        this.windowNode.addEventListener('pointerdown', stopProp);
+        this.windowNode.addEventListener('touchstart', stopProp);
+        this.windowNode.addEventListener('wheel', (e) => { e.stopPropagation(); }, { passive: false });
     }
 
-    _onDragStart(e) {
-        if (e.target.closest('button, a, input, textarea, select')) return;
-
-        if (this.callbacks.onDragStart) this.callbacks.onDragStart(e);
-        if (this.state.isDocked) return;
-
-        this.state.isDragging = true;
-        this.bringToFront();
-
-        const canvasRect = this.scene.game.canvas.getBoundingClientRect();
-        this.state.scale.x = canvasRect.width / this.scene.scale.width;
-        this.state.scale.y = canvasRect.height / this.scene.scale.height;
-
-        const winRect = this.windowNode.getBoundingClientRect();
-        this.state.dragOffset.x = e.clientX - winRect.left;
-        this.state.dragOffset.y = e.clientY - winRect.top;
-
-        this.windowNode.style.margin = '0';
-        this.windowNode.style.transform = 'none';
-    }
-
-    _onDragMove(e) {
-        if (!this.state.isDragging) return;
-        e.preventDefault();
-
-        const canvasRect = this.scene.game.canvas.getBoundingClientRect();
-        const visualX = e.clientX - canvasRect.left - this.state.dragOffset.x;
-        const visualY = e.clientY - canvasRect.top - this.state.dragOffset.y;
-
-        const logicX = visualX / this.state.scale.x;
-        const logicY = visualY / this.state.scale.y;
-
-        this.windowNode.style.left = `${logicX}px`;
-        this.windowNode.style.top = `${logicY}px`;
-
-        if (this.callbacks.onDragMove) this.callbacks.onDragMove(e, logicX, logicY);
-    }
-
-    _onDragEnd(e) {
-        if (this.state.isDragging) {
-            this.state.isDragging = false;
-            this.windowNode.style.zIndex = '10000';
-            // IMPORTANTE: Llamar al callback para que ModularWindow guarde la posición
-            if (this.callbacks.onDragEnd) this.callbacks.onDragEnd(e);
+    _onDockStateChange() {
+        const isDocked = this.windowNode.classList.contains('docked');
+        if (isDocked) {
+            this.windowNode.style.borderRadius = '0';
+            this.windowNode.style.boxShadow = 'none';
+        } else {
+            this.windowNode.style.borderRadius = this.config.borderRad ? '' : '0';
+            if (this.config.showTitle) {
+                this.windowNode.style.boxShadow = '';
+            } else {
+                this.windowNode.style.boxShadow = 'none';
+            }
         }
     }
 
     bringToFront() {
-        this.windowNode.style.zIndex = '10001';
+        if (this.focusCallback) {
+            this.focusCallback();
+        }
+    }
+
+    toggleMinimizeButton(visible) {
+        const minBtn = this.windowNode.querySelector('.win-btn[data-action="minimize"]');
+        if (minBtn) minBtn.style.display = visible ? 'flex' : 'none';
     }
 
     toggleMinimize() {
+        // [IMPORTANTE] Debe coincidir con height de .window-header en CSS
         const HEADER_HEIGHT = 42;
+
+        const minBtnImg = this.windowNode.querySelector('.win-btn[data-action="minimize"] img');
+
         if (!this.state.isMinimized) {
+            // -- MINIMIZAR --
             this.state.lastHeight = this.windowNode.offsetHeight;
+
+            // Forzamos la altura actual antes de animar para que la transición de CSS funcione
             this.windowNode.style.height = `${this.state.lastHeight}px`;
-            this.windowNode.offsetHeight; // force reflow
+            // Forzar reflow
+            this.windowNode.offsetHeight;
+
             this.windowNode.classList.add('minimized');
+
+            // Fijar altura solo al header
             this.windowNode.style.height = `${HEADER_HEIGHT}px`;
             this.windowNode.style.overflow = 'hidden';
+
+            if (minBtnImg) minBtnImg.src = 'public/images/ui/editors/maximize.svg';
         } else {
+            // -- RESTAURAR --
             this.windowNode.classList.remove('minimized');
+
+            // Restaurar altura anterior
             this.windowNode.style.height = `${this.state.lastHeight}px`;
+
             setTimeout(() => {
                 if (!this.state.isMinimized) {
-                    this.windowNode.style.height = this.config.height === 'auto' ? 'auto' : `${this.config.height}px`;
+                    // Si estaba en 'auto' o era docked, ajustamos
+                    if (this.config.height === 'auto' && !this.state.isDocked) {
+                        this.windowNode.style.height = 'auto';
+                    } else if (this.state.isDocked) {
+                        // Si está dockeada, mantenemos la altura calculada
+                    }
                     this.windowNode.style.overflow = 'visible';
                 }
-            }, 300);
+            }, 300); // 300ms debe coincidir con la transición CSS
+
+            if (minBtnImg) minBtnImg.src = 'public/images/ui/editors/minimize.svg';
         }
         this.state.isMinimized = !this.state.isMinimized;
     }
 
     destroy() {
-        if (this._dragBinds) {
-            window.removeEventListener('mousemove', this._dragBinds.move);
-            window.removeEventListener('mouseup', this._dragBinds.end);
-        }
+        if (this.dragger) this.dragger.destroy();
+        if (this.resizer) this.resizer.destroy();
+        this.domContainer = null;
     }
 }

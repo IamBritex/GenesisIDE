@@ -1,0 +1,200 @@
+<window-config>
+    <title>Properties</title>
+    <layout width="300" height="400" />
+    <behavior draggable="true" overlay="false" resizable="true" />
+    <controls minimize="true" close="true" />
+</window-config>
+
+<style>
+    .properties-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background-color: var(--bg-window);
+        color: var(--text-main);
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        font-size: 12px;
+        overflow: hidden;
+    }
+
+    .prop-search-bar {
+        padding: 6px;
+        background-color: var(--bg-header);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .prop-search-input {
+        width: 100%;
+        background: var(--bg-input);
+        border: 1px solid var(--border-subtle);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 3px;
+        outline: none;
+    }
+
+    /* [MODIFICADO] Foco en blanco */
+    .prop-search-input:focus {
+        border-color: var(--text-main);
+    }
+
+    .prop-list {
+        flex: 1;
+        overflow-y: auto;
+        padding-bottom: 10px;
+    }
+
+    .prop-category {
+        background-color: #2d2d30;
+        padding: 4px 8px;
+        border-bottom: 1px solid var(--border-subtle);
+        border-top: 1px solid var(--border-subtle);
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        user-select: none;
+        color: #e0e0e0;
+        margin-top: -1px;
+    }
+
+    .prop-category::before {
+        content: '▼';
+        font-size: 8px;
+        margin-right: 8px;
+        color: #999;
+    }
+
+    .prop-row {
+        display: flex;
+        border-bottom: 1px solid #2a2a2a;
+        background-color: var(--bg-window);
+        align-items: center;
+    }
+
+    .prop-row:hover {
+        background-color: var(--bg-hover);
+    }
+
+    .prop-name {
+        width: 40%;
+        padding: 4px 10px;
+        border-right: 1px solid #2a2a2a;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #cccccc;
+    }
+
+    .prop-value {
+        width: 60%;
+        padding: 0;
+        display: flex;
+        align-items: center;
+    }
+
+    .prop-input {
+        width: 100%;
+        height: 24px;
+        background: transparent;
+        border: none;
+        color: white;
+        padding: 0 8px;
+        font-family: inherit;
+        font-size: inherit;
+    }
+
+    /* [MODIFICADO] Foco en blanco */
+    .prop-input:focus {
+        background-color: #383838;
+        outline: 1px solid var(--text-main);
+        outline-offset: -1px;
+    }
+
+    .prop-checkbox {
+        margin: 0 8px;
+    }
+
+    .prop-list::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .prop-list::-webkit-scrollbar-thumb {
+        background: #424242;
+        border-radius: 4px;
+    }
+
+    .prop-list::-webkit-scrollbar-track {
+        background: #1e1e1e;
+    }
+</style>
+
+<div class="properties-container">
+    <div class="prop-search-bar">
+        <input type="text" class="prop-search-input" placeholder="Search properties">
+    </div>
+
+    <div class="prop-list">
+        <div class="prop-category">Appearance</div>
+        <div class="prop-row">
+            <div class="prop-name">Visible</div>
+            <div class="prop-value">
+                <input type="checkbox" checked class="prop-checkbox">
+            </div>
+        </div>
+        <div class="prop-row">
+            <div class="prop-name">BackgroundColor</div>
+            <div class="prop-value">
+                <div style="width:12px; height:12px; background:#ffffff; border:1px solid #666; margin: 0 8px;"></div>
+                <span style="font-family: monospace;">255, 255, 255</span>
+            </div>
+        </div>
+        <div class="prop-row">
+            <div class="prop-name">Transparency</div>
+            <div class="prop-value">
+                <input type="number" class="prop-input" value="0" step="0.1">
+            </div>
+        </div>
+
+        <div class="prop-category">Transform</div>
+        <div class="prop-row">
+            <div class="prop-name">Position</div>
+            <div class="prop-value">
+                <input type="text" class="prop-input" value="0, 0">
+            </div>
+        </div>
+        <div class="prop-row">
+            <div class="prop-name">Size</div>
+            <div class="prop-value">
+                <input type="text" class="prop-input" value="100, 100">
+            </div>
+        </div>
+        <div class="prop-row">
+            <div class="prop-name">Rotation</div>
+            <div class="prop-value">
+                <input type="number" class="prop-input" value="0">
+            </div>
+        </div>
+
+        <div class="prop-category">Data</div>
+        <div class="prop-row">
+            <div class="prop-name">Name</div>
+            <div class="prop-value">
+                <input type="text" class="prop-input" value="CharacterNode">
+            </div>
+        </div>
+        <div class="prop-row">
+            <div class="prop-name">ClassName</div>
+            <div class="prop-value">
+                <input type="text" class="prop-input" value="Sprite" readonly style="color: #888; font-style: italic;">
+            </div>
+        </div>
+        <div class="prop-row">
+            <div class="prop-name">Parent</div>
+            <div class="prop-value">
+                <input type="text" class="prop-input" value="Stage" readonly
+                    style="color: var(--text-main); cursor: pointer; text-decoration: underline;">
+            </div>
+        </div>
+    </div>
+</div>

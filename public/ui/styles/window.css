@@ -4,9 +4,12 @@
     flex-direction: column;
     background-color: var(--bg-window);
     border-radius: var(--radius-main);
-    box-shadow: var(--shadow-window);
-    overflow: hidden;
+
+    /* Borde normal para ventanas con título */
     border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-window);
+
+    overflow: hidden;
 
     animation: window-entry var(--anim-speed) var(--anim-ease) forwards;
 
@@ -15,6 +18,14 @@
         transform 0.2s ease,
         border-color 0.2s ease;
     will-change: height, transform;
+}
+
+/* [FIX] Reglas para Toolbar (sin título) */
+.modular-window.no-title-bar {
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    background-color: transparent;
 }
 
 .modular-window.closing {
@@ -61,6 +72,42 @@
     height: 100%;
 }
 
+.window-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    margin: 0;
+    padding: 0;
+    /* Transición suave para cuando se restaura */
+    transition: opacity 0.2s ease, visibility 0s linear 0s;
+    opacity: 1;
+    visibility: visible;
+}
+
+/* [CORRECCIÓN CRÍTICA] Ocultar TODO el contenido al minimizar */
+.modular-window.minimized .window-content {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    /* Retrasamos visibility hidden para permitir que opacity anime primero */
+    transition: opacity 0.2s ease, visibility 0s linear 0.2s;
+}
+
+/* También ocultamos el modal-container por si acaso se usa fuera del content */
+.modular-window.minimized .modal-container {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.modular-window.dragging {
+    opacity: 0.85;
+    transition: none;
+}
+
 .win-btn {
     width: 32px;
     height: 32px;
@@ -72,7 +119,6 @@
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
-    /* IMPORTANT: Esto ayuda visualmente, pero el JS hará el trabajo funcional */
     outline: none;
 }
 
@@ -111,9 +157,4 @@
     box-sizing: border-box;
     transition: opacity 0.2s ease;
     opacity: 1;
-}
-
-.modular-window.minimized .modal-container {
-    opacity: 0;
-    pointer-events: none;
 }

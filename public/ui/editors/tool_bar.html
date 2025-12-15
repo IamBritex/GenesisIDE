@@ -1,0 +1,255 @@
+<window-config>
+    <title>Main Toolbar</title>
+    <layout width="1280" height="38" x="0" y="0" />
+    <behavior draggable="false" overlay="false" resizable="false" always-on-top="true" />
+    <controls title="false" minimize="false" close="false" />
+</window-config>
+
+<style>
+    /* FIX PARA MENÚS DESPLEGABLES */
+    .modular-window,
+    .window-content {
+        overflow: visible !important;
+    }
+
+    .toolbar-container {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        background-color: var(--bg-header);
+        border-bottom: 1px solid var(--border-subtle);
+        color: var(--text-muted);
+        font-family: var(--font-main);
+        font-size: 13px;
+        user-select: none;
+        padding: 0 10px;
+        box-sizing: border-box;
+        overflow: visible;
+        /* IMPORTANTE */
+    }
+
+    .menu-bar {
+        display: flex;
+        gap: 2px;
+        margin-right: 20px;
+        color: var(--text-main);
+        height: 100%;
+        align-items: center;
+    }
+
+    .menu-group {
+        position: relative;
+        height: 100%;
+        display: flex;
+        align-items: center;
+    }
+
+    .menu-item {
+        padding: 4px 10px;
+        cursor: pointer;
+        border-radius: var(--radius-sm);
+        transition: background-color 0.1s;
+        margin: 0 2px;
+    }
+
+    .menu-item:hover,
+    .menu-group.active .menu-item {
+        background-color: var(--bg-hover);
+        color: var(--text-main);
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        min-width: 180px;
+        background-color: #1f1f1f;
+        border: 1px solid var(--border-subtle);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        border-radius: 0 0 4px 4px;
+        padding: 4px 0;
+        z-index: 99999;
+        flex-direction: column;
+    }
+
+    .dropdown-menu.show {
+        display: flex;
+    }
+
+    .dropdown-item {
+        padding: 6px 16px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #cccccc;
+        font-size: 12px;
+    }
+
+    .dropdown-item:hover {
+        background-color: #007acc;
+        color: white;
+    }
+
+    .dropdown-item span.shortcut {
+        color: #777;
+        font-size: 10px;
+        margin-left: 15px;
+    }
+
+    .dropdown-item:hover span.shortcut {
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .dropdown-separator {
+        height: 1px;
+        background-color: #333;
+        margin: 4px 0;
+    }
+
+    .spacer {
+        flex: 1;
+    }
+
+    .status-info {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .tool-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        color: var(--text-muted);
+        transition: all 0.1s;
+    }
+
+    .tool-btn:hover {
+        background-color: var(--bg-hover);
+        color: var(--text-main);
+    }
+
+    .material-icons {
+        font-size: 18px;
+    }
+</style>
+
+<div class="toolbar-container">
+    <div class="menu-bar">
+        <div class="menu-group">
+            <div class="menu-item" data-target="file-menu">File</div>
+            <div class="dropdown-menu" id="file-menu">
+                <div class="dropdown-item" onclick="console.log('Action: New Project')">New Project... <span
+                        class="shortcut">Ctrl+N</span></div>
+                <div class="dropdown-item" onclick="console.log('Action: Open')">Open File... <span
+                        class="shortcut">Ctrl+O</span></div>
+                <div class="dropdown-separator"></div>
+                <div class="dropdown-item" onclick="console.log('Action: Save')">Save <span
+                        class="shortcut">Ctrl+S</span></div>
+                <div class="dropdown-item" onclick="console.log('Action: Save As')">Save As... <span
+                        class="shortcut">Ctrl+Shift+S</span></div>
+                <div class="dropdown-separator"></div>
+                <div class="dropdown-item" onclick="console.log('Action: Exit')">Exit</div>
+            </div>
+        </div>
+        <div class="menu-group">
+            <div class="menu-item" data-target="edit-menu">Edit</div>
+            <div class="dropdown-menu" id="edit-menu">
+                <div class="dropdown-item" onclick="console.log('Action: Undo')">Undo <span
+                        class="shortcut">Ctrl+Z</span></div>
+                <div class="dropdown-item" onclick="console.log('Action: Redo')">Redo <span
+                        class="shortcut">Ctrl+Y</span></div>
+                <div class="dropdown-separator"></div>
+                <div class="dropdown-item" onclick="console.log('Action: Cut')">Cut <span class="shortcut">Ctrl+X</span>
+                </div>
+                <div class="dropdown-item" onclick="console.log('Action: Copy')">Copy <span
+                        class="shortcut">Ctrl+C</span></div>
+                <div class="dropdown-item" onclick="console.log('Action: Paste')">Paste <span
+                        class="shortcut">Ctrl+V</span></div>
+            </div>
+        </div>
+        <div class="menu-group">
+            <div class="menu-item" data-target="view-menu">View</div>
+            <div class="dropdown-menu" id="view-menu">
+                <div class="dropdown-item" onclick="console.log('Action: Zoom In')">Zoom In <span
+                        class="shortcut">Ctrl++</span></div>
+                <div class="dropdown-item" onclick="console.log('Action: Zoom Out')">Zoom Out <span
+                        class="shortcut">Ctrl+-</span></div>
+                <div class="dropdown-item" onclick="console.log('Action: Reset Zoom')">Reset Zoom <span
+                        class="shortcut">Ctrl+0</span></div>
+                <div class="dropdown-separator"></div>
+                <div class="dropdown-item" onclick="console.log('Action: Toggle Grid')">Toggle Grid</div>
+            </div>
+        </div>
+        <div class="menu-group">
+            <div class="menu-item" data-target="help-menu">Help</div>
+            <div class="dropdown-menu" id="help-menu">
+                <div class="dropdown-item" onclick="console.log('Action: Documentation')">Documentation</div>
+                <div class="dropdown-item" onclick="console.log('Action: About')">About Genesis Engine</div>
+            </div>
+        </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="status-info">
+        <span>Genesis Engine IDE v1.0</span>
+        <div class="tool-btn" title="Settings"><span class="material-icons">settings</span></div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const menuItems = document.querySelectorAll('.menu-item');
+        const allDropdowns = document.querySelectorAll('.dropdown-menu');
+        const menuGroups = document.querySelectorAll('.menu-group');
+
+        const closeAllDropdowns = () => {
+            allDropdowns.forEach(dd => dd.classList.remove('show'));
+            menuGroups.forEach(grp => grp.classList.remove('active'));
+        };
+
+        menuItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const targetId = item.dataset.target;
+                const targetDropdown = document.getElementById(targetId);
+                const parentGroup = item.closest('.menu-group');
+
+                if (targetDropdown.classList.contains('show')) {
+                    closeAllDropdowns();
+                } else {
+                    closeAllDropdowns();
+                    targetDropdown.classList.add('show');
+                    parentGroup.classList.add('active');
+                }
+            });
+
+            item.addEventListener('mouseenter', () => {
+                let isAnyOpen = false;
+                allDropdowns.forEach(dd => {
+                    if (dd.classList.contains('show')) isAnyOpen = true;
+                });
+                if (isAnyOpen) {
+                    const targetId = item.dataset.target;
+                    const targetDropdown = document.getElementById(targetId);
+                    const parentGroup = item.closest('.menu-group');
+                    closeAllDropdowns();
+                    targetDropdown.classList.add('show');
+                    parentGroup.classList.add('active');
+                }
+            });
+        });
+
+        window.addEventListener('click', () => {
+            closeAllDropdowns();
+        });
+    })();
+</script>
