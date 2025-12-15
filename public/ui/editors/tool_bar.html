@@ -6,7 +6,6 @@
 </window-config>
 
 <style>
-    /* FIX PARA MENÚS DESPLEGABLES */
     .modular-window,
     .window-content {
         overflow: visible !important;
@@ -26,7 +25,6 @@
         padding: 0 10px;
         box-sizing: border-box;
         overflow: visible;
-        /* IMPORTANTE */
     }
 
     .menu-bar {
@@ -59,16 +57,17 @@
         color: var(--text-main);
     }
 
+    /* --- DROPDOWN PRINCIPAL --- */
     .dropdown-menu {
         display: none;
         position: absolute;
         top: 100%;
         left: 0;
-        min-width: 180px;
+        min-width: 220px;
         background-color: #1f1f1f;
         border: 1px solid var(--border-subtle);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-        border-radius: 0 0 4px 4px;
+        border-radius: 4px;
         padding: 4px 0;
         z-index: 99999;
         flex-direction: column;
@@ -85,7 +84,9 @@
         justify-content: space-between;
         align-items: center;
         color: #cccccc;
-        font-size: 12px;
+        font-size: 13px;
+        position: relative;
+        /* Necesario para posicionar submenús */
     }
 
     .dropdown-item:hover {
@@ -107,6 +108,35 @@
         height: 1px;
         background-color: #333;
         margin: 4px 0;
+    }
+
+    /* --- SUBMENÚS (ANIDADOS) --- */
+
+    /* Indicador de flecha derecha para ítems con submenú */
+    .dropdown-item.has-submenu::after {
+        content: '›';
+        /* O usar material icon 'chevron_right' */
+        font-family: monospace;
+        font-weight: bold;
+        font-size: 14px;
+        margin-left: 10px;
+    }
+
+    /* El submenú en sí */
+    .dropdown-item .dropdown-menu {
+        top: -4px;
+        /* Alinear con el borde superior del item padre */
+        left: 100%;
+        /* Mover a la derecha del item padre */
+        margin-left: -1px;
+        /* Pequeño solape para estética */
+        display: none;
+        /* Oculto por defecto */
+    }
+
+    /* Mostrar submenú al hacer hover en el item padre */
+    .dropdown-item.has-submenu:hover>.dropdown-menu {
+        display: flex;
     }
 
     .spacer {
@@ -152,52 +182,83 @@
                         class="shortcut">Ctrl+N</span></div>
                 <div class="dropdown-item" onclick="console.log('Action: Open')">Open File... <span
                         class="shortcut">Ctrl+O</span></div>
+
+                <div class="dropdown-item has-submenu">
+                    Open Recent
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item">Project_FNF_v1</div>
+                        <div class="dropdown-item">Week_7_Remix</div>
+                        <div class="dropdown-separator"></div>
+                        <div class="dropdown-item">Clear History</div>
+                    </div>
+                </div>
+
                 <div class="dropdown-separator"></div>
                 <div class="dropdown-item" onclick="console.log('Action: Save')">Save <span
                         class="shortcut">Ctrl+S</span></div>
-                <div class="dropdown-item" onclick="console.log('Action: Save As')">Save As... <span
-                        class="shortcut">Ctrl+Shift+S</span></div>
+
+                <div class="dropdown-item has-submenu">
+                    Preferences
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item">Settings <span class="shortcut">Ctrl+,</span></div>
+                        <div class="dropdown-separator"></div>
+                        <div class="dropdown-item has-submenu">
+                            Theme
+                            <div class="dropdown-menu">
+                                <div class="dropdown-item">Dark Modern</div>
+                                <div class="dropdown-item">Dark High Contrast</div>
+                                <div class="dropdown-item">Light</div>
+                            </div>
+                        </div>
+                        <div class="dropdown-item">Keyboard Shortcuts</div>
+                    </div>
+                </div>
+
                 <div class="dropdown-separator"></div>
                 <div class="dropdown-item" onclick="console.log('Action: Exit')">Exit</div>
             </div>
         </div>
+
         <div class="menu-group">
             <div class="menu-item" data-target="edit-menu">Edit</div>
             <div class="dropdown-menu" id="edit-menu">
-                <div class="dropdown-item" onclick="console.log('Action: Undo')">Undo <span
-                        class="shortcut">Ctrl+Z</span></div>
-                <div class="dropdown-item" onclick="console.log('Action: Redo')">Redo <span
-                        class="shortcut">Ctrl+Y</span></div>
+                <div class="dropdown-item">Undo <span class="shortcut">Ctrl+Z</span></div>
+                <div class="dropdown-item">Redo <span class="shortcut">Ctrl+Y</span></div>
                 <div class="dropdown-separator"></div>
-                <div class="dropdown-item" onclick="console.log('Action: Cut')">Cut <span class="shortcut">Ctrl+X</span>
-                </div>
-                <div class="dropdown-item" onclick="console.log('Action: Copy')">Copy <span
-                        class="shortcut">Ctrl+C</span></div>
-                <div class="dropdown-item" onclick="console.log('Action: Paste')">Paste <span
-                        class="shortcut">Ctrl+V</span></div>
+                <div class="dropdown-item">Cut <span class="shortcut">Ctrl+X</span></div>
+                <div class="dropdown-item">Copy <span class="shortcut">Ctrl+C</span></div>
+                <div class="dropdown-item">Paste <span class="shortcut">Ctrl+V</span></div>
             </div>
         </div>
+
         <div class="menu-group">
             <div class="menu-item" data-target="view-menu">View</div>
             <div class="dropdown-menu" id="view-menu">
-                <div class="dropdown-item" onclick="console.log('Action: Zoom In')">Zoom In <span
-                        class="shortcut">Ctrl++</span></div>
-                <div class="dropdown-item" onclick="console.log('Action: Zoom Out')">Zoom Out <span
-                        class="shortcut">Ctrl+-</span></div>
-                <div class="dropdown-item" onclick="console.log('Action: Reset Zoom')">Reset Zoom <span
-                        class="shortcut">Ctrl+0</span></div>
+                <div class="dropdown-item">Zoom In <span class="shortcut">Ctrl++</span></div>
+                <div class="dropdown-item">Zoom Out <span class="shortcut">Ctrl+-</span></div>
+                <div class="dropdown-item">Reset Zoom <span class="shortcut">Ctrl+0</span></div>
                 <div class="dropdown-separator"></div>
-                <div class="dropdown-item" onclick="console.log('Action: Toggle Grid')">Toggle Grid</div>
+
+                <div class="dropdown-item has-submenu">
+                    Layout
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item">Show Explorer</div>
+                        <div class="dropdown-item">Show Properties</div>
+                        <div class="dropdown-item">Show Timeline</div>
+                    </div>
+                </div>
             </div>
         </div>
+
         <div class="menu-group">
             <div class="menu-item" data-target="help-menu">Help</div>
             <div class="dropdown-menu" id="help-menu">
-                <div class="dropdown-item" onclick="console.log('Action: Documentation')">Documentation</div>
-                <div class="dropdown-item" onclick="console.log('Action: About')">About Genesis Engine</div>
+                <div class="dropdown-item">Documentation</div>
+                <div class="dropdown-item">About Genesis Engine</div>
             </div>
         </div>
     </div>
+
     <div class="spacer"></div>
     <div class="status-info">
         <span>Genesis Engine IDE v1.0</span>
@@ -207,12 +268,13 @@
 
 <script>
     (function () {
-        const menuItems = document.querySelectorAll('.menu-item');
-        const allDropdowns = document.querySelectorAll('.dropdown-menu');
+        const menuItems = document.querySelectorAll('.menu-bar > .menu-group > .menu-item');
+        const allDropdowns = document.querySelectorAll('.menu-bar .dropdown-menu'); // Solo los top-level
         const menuGroups = document.querySelectorAll('.menu-group');
 
         const closeAllDropdowns = () => {
-            allDropdowns.forEach(dd => dd.classList.remove('show'));
+            // Cerramos solo los dropdowns principales, los submenús se cierran por CSS al quitar hover
+            document.querySelectorAll('.menu-bar > .menu-group > .dropdown-menu').forEach(dd => dd.classList.remove('show'));
             menuGroups.forEach(grp => grp.classList.remove('active'));
         };
 
@@ -223,6 +285,7 @@
                 const targetDropdown = document.getElementById(targetId);
                 const parentGroup = item.closest('.menu-group');
 
+                // Si ya está abierto, cerrar
                 if (targetDropdown.classList.contains('show')) {
                     closeAllDropdowns();
                 } else {
@@ -234,13 +297,16 @@
 
             item.addEventListener('mouseenter', () => {
                 let isAnyOpen = false;
-                allDropdowns.forEach(dd => {
+                // Verificamos si algún menú PRINCIPAL está abierto
+                document.querySelectorAll('.menu-bar > .menu-group > .dropdown-menu').forEach(dd => {
                     if (dd.classList.contains('show')) isAnyOpen = true;
                 });
+
                 if (isAnyOpen) {
                     const targetId = item.dataset.target;
                     const targetDropdown = document.getElementById(targetId);
                     const parentGroup = item.closest('.menu-group');
+
                     closeAllDropdowns();
                     targetDropdown.classList.add('show');
                     parentGroup.classList.add('active');

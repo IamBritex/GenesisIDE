@@ -14,8 +14,6 @@ export default class WindowDragger {
         this.interaction = interactionRef;
 
         this.docking = new WindowDocking(scene);
-        this.currentDockState = null;
-
         this.dragOffset = { x: 0, y: 0 };
         this.scale = { x: 1, y: 1 };
 
@@ -92,8 +90,9 @@ export default class WindowDragger {
         this.windowNode.classList.add('dragging');
         this.windowNode.classList.remove('docked');
 
-        // [NUEVO] Liberar el lado ocupado
+        // [NUEVO] Actualización explícita del estado
         this.state.dockSide = null;
+        this.state.isDocked = false;
 
         if (this.interaction && this.interaction._onDockStateChange) {
             this.interaction._onDockStateChange();
@@ -135,7 +134,6 @@ export default class WindowDragger {
             const mouseLogicX = (e.clientX - canvasRect.left) / this.scale.x;
             const mouseLogicY = (e.clientY - canvasRect.top) / this.scale.y;
 
-            // [MODIFICADO] Pasamos el checker al calcular el estado
             const updatedDockState = this.docking.getDockingState(
                 mouseLogicX,
                 mouseLogicY,
@@ -162,14 +160,13 @@ export default class WindowDragger {
             }
 
             this.windowNode.classList.remove('dragging');
-            this.windowNode.style.zIndex = '10000'; // Fallback temporal antes del focus
+            this.windowNode.style.zIndex = '10000'; // Fallback temporal
 
             if (this.docking) {
                 const canvasRect = this.scene.game.canvas.getBoundingClientRect();
                 const mouseLogicX = (e.clientX - canvasRect.left) / this.scale.x;
                 const mouseLogicY = (e.clientY - canvasRect.top) / this.scale.y;
 
-                // [MODIFICADO] Pasamos el checker también al soltar
                 const dockState = this.docking.getDockingState(
                     mouseLogicX,
                     mouseLogicY,
@@ -179,6 +176,16 @@ export default class WindowDragger {
                 );
 
                 if (dockState.isDocked) {
+                    // [IMPORTANTE] Marcar como dockeada en el estado antes de nada
+                    this.state.isDocked = true;
+
+                    // [NUEVO] Si está minimizada, la desminimizamos automáticamente.
+                    // Hacemos esto ANTES de aplicar las dimensiones del dock, 
+                    // para que toggleMinimize no interfiera con la altura final.
+                    if (this.interaction && this.interaction.state.isMinimized) {
+                        this.interaction.toggleMinimize();
+                    }
+
                     this.state.originalWidth = this.windowNode.style.width || this.windowNode.offsetWidth;
                     this.state.originalHeight = this.windowNode.style.height || this.windowNode.offsetHeight;
 
@@ -189,20 +196,22 @@ export default class WindowDragger {
                     if (dockState.height) this.windowNode.style.height = `${dockState.height}px`;
 
                     this.windowNode.classList.add('docked');
-
-                    // [NUEVO] Registrar ocupación
                     this.state.dockSide = dockState.side;
 
                     if (this.interaction) this.interaction.toggleMinimizeButton(false);
                 } else {
                     this.windowNode.classList.remove('docked');
                     this.state.dockSide = null;
+                    this.state.isDocked = false; // Actualizar estado
                 }
 
                 this.docking.hideFeedback();
             }
 
             if (this.callbacks.onDragEnd) this.callbacks.onDragEnd(e);
+
+            // Notificar al Layout Manager por si algo cambió
+            window.dispatchEvent(new CustomEvent('layout-update'));
         }
     }
 

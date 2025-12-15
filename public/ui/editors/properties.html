@@ -15,12 +15,14 @@
         font-family: 'Segoe UI', Tahoma, sans-serif;
         font-size: 12px;
         overflow: hidden;
+        position: relative;
     }
 
     .prop-search-bar {
         padding: 6px;
         background-color: var(--bg-header);
         border-bottom: 1px solid var(--border-subtle);
+        flex-shrink: 0;
     }
 
     .prop-search-input {
@@ -31,17 +33,24 @@
         padding: 4px 8px;
         border-radius: 3px;
         outline: none;
+        box-sizing: border-box;
     }
 
-    /* [MODIFICADO] Foco en blanco */
     .prop-search-input:focus {
         border-color: var(--text-main);
     }
 
-    .prop-list {
+    /* Contenedor de la lista (oculto por defecto) */
+    .prop-content {
         flex: 1;
         overflow-y: auto;
         padding-bottom: 10px;
+        display: none;
+        /* Se activa vía JS */
+    }
+
+    .prop-content.active {
+        display: block;
     }
 
     .prop-category {
@@ -104,7 +113,6 @@
         font-size: inherit;
     }
 
-    /* [MODIFICADO] Foco en blanco */
     .prop-input:focus {
         background-color: #383838;
         outline: 1px solid var(--text-main);
@@ -113,6 +121,38 @@
 
     .prop-checkbox {
         margin: 0 8px;
+    }
+
+    /* --- ESTADO VACÍO (Empty State) --- */
+    .prop-empty-state {
+        position: absolute;
+        top: 36px;
+        /* Altura del search bar */
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: var(--text-muted);
+        text-align: center;
+        padding: 20px;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .prop-empty-state .icon {
+        font-size: 48px;
+        opacity: 0.2;
+        margin-bottom: 10px;
+    }
+
+    .prop-empty-state span {
+        font-size: 13px;
+        opacity: 0.6;
+        max-width: 180px;
+        line-height: 1.5;
     }
 
     .prop-list::-webkit-scrollbar {
@@ -131,10 +171,15 @@
 
 <div class="properties-container">
     <div class="prop-search-bar">
-        <input type="text" class="prop-search-input" placeholder="Search properties">
+        <input type="text" class="prop-search-input" placeholder="Filter properties...">
     </div>
 
-    <div class="prop-list">
+    <div class="prop-empty-state" id="propEmpty">
+        <span class="material-icons icon">tune</span>
+        <span>Select an element to view its properties</span>
+    </div>
+
+    <div class="prop-content" id="propList">
         <div class="prop-category">Appearance</div>
         <div class="prop-row">
             <div class="prop-name">Visible</div>
@@ -143,58 +188,54 @@
             </div>
         </div>
         <div class="prop-row">
-            <div class="prop-name">BackgroundColor</div>
+            <div class="prop-name">Color</div>
             <div class="prop-value">
                 <div style="width:12px; height:12px; background:#ffffff; border:1px solid #666; margin: 0 8px;"></div>
-                <span style="font-family: monospace;">255, 255, 255</span>
+                <span style="font-family: monospace;">#FFFFFF</span>
             </div>
         </div>
         <div class="prop-row">
-            <div class="prop-name">Transparency</div>
+            <div class="prop-name">Alpha</div>
             <div class="prop-value">
-                <input type="number" class="prop-input" value="0" step="0.1">
+                <input type="number" class="prop-input" value="1.0" step="0.1">
             </div>
         </div>
 
         <div class="prop-category">Transform</div>
         <div class="prop-row">
-            <div class="prop-name">Position</div>
-            <div class="prop-value">
-                <input type="text" class="prop-input" value="0, 0">
-            </div>
-        </div>
-        <div class="prop-row">
-            <div class="prop-name">Size</div>
-            <div class="prop-value">
-                <input type="text" class="prop-input" value="100, 100">
-            </div>
-        </div>
-        <div class="prop-row">
-            <div class="prop-name">Rotation</div>
+            <div class="prop-name">X</div>
             <div class="prop-value">
                 <input type="number" class="prop-input" value="0">
             </div>
         </div>
-
-        <div class="prop-category">Data</div>
         <div class="prop-row">
-            <div class="prop-name">Name</div>
+            <div class="prop-name">Y</div>
             <div class="prop-value">
-                <input type="text" class="prop-input" value="CharacterNode">
-            </div>
-        </div>
-        <div class="prop-row">
-            <div class="prop-name">ClassName</div>
-            <div class="prop-value">
-                <input type="text" class="prop-input" value="Sprite" readonly style="color: #888; font-style: italic;">
-            </div>
-        </div>
-        <div class="prop-row">
-            <div class="prop-name">Parent</div>
-            <div class="prop-value">
-                <input type="text" class="prop-input" value="Stage" readonly
-                    style="color: var(--text-main); cursor: pointer; text-decoration: underline;">
+                <input type="number" class="prop-input" value="0">
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    (function () {
+        // Lógica simple para alternar vistas (Demo)
+        const emptyState = document.getElementById('propEmpty');
+        const content = document.getElementById('propList');
+
+        // Exponemos una función global temporal para pruebas
+        // Uso: window.updatePropView(true) para mostrar lista, false para vacío
+        window.updatePropView = (hasSelection) => {
+            if (hasSelection) {
+                emptyState.style.display = 'none';
+                content.classList.add('active');
+            } else {
+                emptyState.style.display = 'flex';
+                content.classList.remove('active');
+            }
+        };
+
+        // Por defecto vacío
+        window.updatePropView(false);
+    })();
+</script>

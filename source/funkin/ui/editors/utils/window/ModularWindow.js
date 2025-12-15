@@ -12,13 +12,8 @@ export class ModularWindow {
     static currentMaxDepth = 10000;
     static currentTopDepth = 1000000;
 
-    static getNextDepth() {
-        return ++ModularWindow.currentMaxDepth;
-    }
-
-    static getNextTopDepth() {
-        return ++ModularWindow.currentTopDepth;
-    }
+    static getNextDepth() { return ++ModularWindow.currentMaxDepth; }
+    static getNextTopDepth() { return ++ModularWindow.currentTopDepth; }
 
     constructor(scene, contentOrConfig) {
         this.scene = scene;
@@ -43,19 +38,16 @@ export class ModularWindow {
 
         this._calculateAndApplyPosition();
 
-        // [NUEVO] Función para verificar si un lado está ocupado por OTRA ventana
         const occupancyChecker = (side) => {
             return ModularWindow.openPopups.some(win =>
-                win !== this && // No soy yo
-                win.interaction && // Tiene interacción
-                win.interaction.state.dockSide === side // Tiene ese lado ocupado
+                win !== this &&
+                win.interaction &&
+                win.interaction.state.dockSide === side
             );
         };
 
         this.interaction = new WindowInteraction(
-            scene,
-            windowNode,
-            this.config,
+            scene, windowNode, this.config,
             {
                 onClose: () => this.close(),
                 onDragEnd: (e) => {
@@ -65,8 +57,8 @@ export class ModularWindow {
                 onDragMove: (e, x, y) => this.onDragMove && this.onDragMove(e, x, y),
                 onDragStart: (e) => this.onDragStart && this.onDragStart(e)
             },
-            () => this.focus(),     // Callback de Foco (Profundidad)
-            occupancyChecker        // [NUEVO] Callback de Ocupación
+            () => this.focus(),
+            occupancyChecker
         );
 
         this.interaction.domContainer = this.domElement.node;
@@ -75,36 +67,32 @@ export class ModularWindow {
         this._playSound('editorOpen');
 
         this.focus();
-
         this.domElement.node.style.visibility = 'visible';
+
+        // [NUEVO] Notificar al layout manager que se abrió una ventana
+        window.dispatchEvent(new CustomEvent('layout-update'));
     }
 
     focus() {
         if (!this.domElement) return;
         if (this.config.alwaysOnTop) {
-            const topDepth = ModularWindow.getNextTopDepth();
-            this.domElement.setDepth(topDepth);
+            this.domElement.setDepth(ModularWindow.getNextTopDepth());
             return;
         }
         const newDepth = ModularWindow.getNextDepth();
-        if (newDepth < 1000000) {
-            this.domElement.setDepth(newDepth);
-        }
+        if (newDepth < 1000000) this.domElement.setDepth(newDepth);
     }
 
     _calculateAndApplyPosition() {
         const gameW = this.scene.scale.width;
         const gameH = this.scene.scale.height;
-        let finalX = 0;
-        let finalY = 0;
+        let finalX = 0, finalY = 0;
         const saved = ModularWindow.savedPositions.get(this.storageKey);
 
         if (saved) {
-            finalX = saved.x;
-            finalY = saved.y;
+            finalX = saved.x; finalY = saved.y;
         } else if (this.config.x !== null && this.config.y !== null) {
-            finalX = this.config.x;
-            finalY = this.config.y;
+            finalX = this.config.x; finalY = this.config.y;
         } else {
             const winW = this.windowNode.offsetWidth || (typeof this.config.width === 'number' ? this.config.width : 400);
             const winH = this.windowNode.offsetHeight || 300;
@@ -153,7 +141,13 @@ export class ModularWindow {
         this._saveCurrentPosition();
         this.windowNode.classList.add('closing');
         if (this.interaction) this.interaction.destroy();
+
+        // 1. Quitar del array PRIMERO para que el LayoutManager ya no la vea
         ModularWindow.openPopups = ModularWindow.openPopups.filter(p => p !== this);
+
+        // 2. [IMPORTANTE] Emitir evento para reajustar el TabBar
+        window.dispatchEvent(new CustomEvent('layout-update'));
+
         setTimeout(() => {
             if (this.domElement) {
                 this.domElement.destroy();

@@ -1,17 +1,25 @@
 import { GeneralPreload } from './utils/preload/GeneralPreload.js';
 import MouseHandler from './inputs/mouse.js';
-import { CameraManager } from '../../play/camera/Camera.js';
+// [MODIFICADO] Nueva ruta de importación
+import { CameraManager } from './camera/camera.js';
 import Checkboard from './utils/checkboard.js';
 import DefaultWindowsOpened from './utils/window/DefaultWindowsOpened.js';
-import { ToastManager } from './utils/Toast.js';
 import { ModularWindow } from './utils/window/ModularWindow.js';
+import { ToastManager } from './utils/Toast.js';
+import CleanStateManager from './managers/cleanStateManager.js';
+import EditorModes from './modes/editorModes.js';
+import DockLayoutManager from './managers/DockLayoutManager.js';
 
 export class IDE extends Phaser.Scene {
     constructor() {
         super({ key: 'IDE' });
+
         this.cameraManager = null;
         this.checkboard = null;
         this.toast = null;
+        this.editorModes = null;
+        this.layoutManager = null;
+        this.modalListener = null;
     }
 
     preload() {
@@ -19,63 +27,51 @@ export class IDE extends Phaser.Scene {
     }
 
     create() {
-        // 1. Inicializar Cámaras
+        // 1. Sistemas Core
         this.cameraManager = new CameraManager(this);
-        this.cameraManager.gameCamera.setBackgroundColor('#333333');
+        // Nota: el color de fondo ya se maneja dentro de CameraManager, 
+        // pero si quieres asegurarlo aquí, está bien.
 
-        // 2. Configurar Fondo (Checkboard)
+        // Fondo (Checkboard configura los límites de la cámara al crearse)
         this.checkboard = new Checkboard(this, this.cameraManager);
 
-        // 3. Inicializar Mouse
+        // Input
         new MouseHandler(this);
 
-        // 4. Inicializar Toast Manager
+        // 2. Sistemas UI
         this.toast = new ToastManager(this);
+        this.editorModes = new EditorModes(this);
+        this.layoutManager = new DockLayoutManager(this);
 
-        // 5. Abrir ventanas por defecto
+        // 3. Ventanas
         DefaultWindowsOpened.open(this);
 
-        // --- LÓGICA DE NUEVA ENTIDAD (MODAL) ---
+        // 4. Eventos
+        this._setupListeners();
 
-        // Listener del evento personalizado 'modal-save'
-        window.addEventListener('modal-save', (e) => {
-            const { name, type } = e.detail;
-            console.log('[IDE] Recibido evento modal-save:', e.detail);
-
-            // Mostrar Feedback Visual
-            this.toast.show('Entidad Creada', `${name} (${type})`);
-
-            // TODO: Aquí agregarías la lógica real para crear el objeto en la escena
-        });
-
-        // [DEBUG] Tecla 'M' para abrir el modal de prueba rápidamente
+        // [DEBUG]
         this.input.keyboard.on('keydown-M', () => {
             const content = this.cache.text.get('modalHtml');
-            if (content) {
-                new ModularWindow(this, content);
-            } else {
-                console.warn('modalHtml no cargado');
-            }
+            if (content) new ModularWindow(this, content);
         });
+    }
+
+    _setupListeners() {
+        this.modalListener = (e) => {
+            const { name, type } = e.detail;
+            console.log('[IDE] Entidad guardada:', e.detail);
+            this.toast.show('Entidad Creada', `${name} (${type})`, 'success');
+        };
+        window.addEventListener('modal-save', this.modalListener);
     }
 
     update(time, delta) {
-        if (this.checkboard) {
-            this.checkboard.update();
-        }
+        if (this.checkboard) this.checkboard.update();
     }
 
     shutdown() {
-        this.checkboard = null;
-        if (this.toast) this.toast.destroy();
-
-        // Reiniciar flag para que al volver a entrar se abran las ventanas
-        DefaultWindowsOpened.hasOpened = false;
-
-        // Limpieza manual de cualquier ventana flotante del DOM
-        const remainingWindows = document.querySelectorAll('.modular-window-container');
-        remainingWindows.forEach(el => el.remove());
+        CleanStateManager.clean(this);
     }
 }
 
-game.scene.add('IDE', IDE, true);
+game.scene.add('IDE', IDE);

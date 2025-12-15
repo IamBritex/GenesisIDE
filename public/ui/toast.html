@@ -1,0 +1,86 @@
+<style>
+    .toast-container {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 20000;
+        pointer-events: none;
+        /* Permitir clicks a través del área vacía */
+    }
+
+    .toast-notification {
+        background-color: var(--bg-window);
+        border: 1px solid var(--border-subtle);
+        border-left: 4px solid var(--accent-color);
+        color: var(--text-main);
+        padding: 12px 16px;
+        border-radius: var(--radius-sm);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        font-family: var(--font-main);
+        min-width: 250px;
+        max-width: 350px;
+        pointer-events: auto;
+        /* Reactivar clicks en la notificación */
+
+        /* Estado inicial para animación */
+        opacity: 0;
+        transform: translateX(-20px);
+        transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .toast-notification.show {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .toast-notification.hide {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    .toast-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 4px;
+    }
+
+    .toast-title {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-main);
+    }
+
+    .toast-body {
+        font-size: 12px;
+        color: var(--text-muted);
+        line-height: 1.4;
+    }
+
+    /* Variantes de color */
+    .toast-notification.success {
+        border-left-color: #4caf50;
+    }
+
+    .toast-notification.error {
+        border-left-color: #f44336;
+    }
+
+    .toast-notification.info {
+        border-left-color: #2196f3;
+    }
+</style>
+
+<div id="toast-template" style="display: none;">
+    <div class="toast-notification">
+        <div class="toast-header">
+            <span class="toast-title">Notificación</span>
+        </div>
+        <div class="toast-body">
+            Mensaje del sistema.
+        </div>
+    </div>
+</div>

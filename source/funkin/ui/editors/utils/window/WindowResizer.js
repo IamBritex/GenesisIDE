@@ -1,7 +1,3 @@
-/**
- * source/funkin/ui/editors/utils/window/WindowResizer.js
- * Módulo encargado de la lógica de redimensionamiento en 8 direcciones.
- */
 export default class WindowResizer {
     constructor(scene, windowNode, sharedState, bringToFrontCallback, config) {
         this.scene = scene;
@@ -13,7 +9,6 @@ export default class WindowResizer {
         this.resizeStart = { x: 0, y: 0, width: 0, height: 0, left: 0, top: 0 };
         this.activeDirection = null;
 
-        // [MODIFICADO] Solo inyectamos si está permitido y no está minimizada
         if (this.config.resizable !== false) {
             this._injectHandles();
             this._bindEvents();
@@ -25,26 +20,16 @@ export default class WindowResizer {
             const handle = document.createElement('div');
             handle.className = `resize-handle ${dir}`;
             handle.dataset.resizeDir = dir;
-            handle.style.cssText = `
-                position: absolute; 
-                z-index: 20; 
-                cursor: ${cursor}; 
-                user-select: none;
-                ${css}
-            `;
+            handle.style.cssText = `position: absolute; z-index: 20; cursor: ${cursor}; user-select: none; ${css}`;
             this.windowNode.appendChild(handle);
             return handle;
         };
-
-        const thick = '6px';
-        const corner = '12px';
-
+        const thick = '6px', corner = '12px';
         this.handles = [
             createHandle('n', 'ns-resize', `top: 0; left: 0; width: 100%; height: ${thick};`),
             createHandle('s', 'ns-resize', `bottom: 0; left: 0; width: 100%; height: ${thick};`),
             createHandle('e', 'ew-resize', `top: 0; right: 0; width: ${thick}; height: 100%;`),
             createHandle('w', 'ew-resize', `top: 0; left: 0; width: ${thick}; height: 100%;`),
-
             createHandle('nw', 'nwse-resize', `top: 0; left: 0; width: ${corner}; height: ${corner}; z-index: 21;`),
             createHandle('ne', 'nesw-resize', `top: 0; right: 0; width: ${corner}; height: ${corner}; z-index: 21;`),
             createHandle('sw', 'nesw-resize', `bottom: 0; left: 0; width: ${corner}; height: ${corner}; z-index: 21;`),
@@ -58,32 +43,22 @@ export default class WindowResizer {
             move: this._onMove.bind(this),
             end: this._onEnd.bind(this)
         };
-
         this.handles.forEach(h => h.addEventListener('mousedown', this._binds.start));
         window.addEventListener('mousemove', this._binds.move);
         window.addEventListener('mouseup', this._binds.end);
     }
 
     _onStart(e) {
-        if (e.button !== 0) return;
-        // Doble seguridad
-        if (this.config.resizable === false) return;
-
-        e.stopPropagation();
-        e.preventDefault();
+        if (e.button !== 0 || this.config.resizable === false) return;
+        e.stopPropagation(); e.preventDefault();
 
         this.state.isResizing = true;
         this.activeDirection = e.target.dataset.resizeDir;
-
         this.resizeStart = {
-            x: e.clientX,
-            y: e.clientY,
-            width: this.windowNode.offsetWidth,
-            height: this.windowNode.offsetHeight,
-            left: parseFloat(this.windowNode.style.left) || 0,
-            top: parseFloat(this.windowNode.style.top) || 0
+            x: e.clientX, y: e.clientY,
+            width: this.windowNode.offsetWidth, height: this.windowNode.offsetHeight,
+            left: parseFloat(this.windowNode.style.left) || 0, top: parseFloat(this.windowNode.style.top) || 0
         };
-
         document.body.style.cursor = getComputedStyle(e.target).cursor;
         if (this.bringToFront) this.bringToFront();
     }
@@ -102,34 +77,37 @@ export default class WindowResizer {
         const minH = this.config.minHeight || 100;
         const dir = this.activeDirection;
 
+        let changed = false;
+
         if (dir.includes('e')) {
             const newWidth = Math.max(minW, this.resizeStart.width + deltaX);
             this.windowNode.style.width = `${newWidth}px`;
-        }
-        else if (dir.includes('w')) {
+            changed = true;
+        } else if (dir.includes('w')) {
             let newWidth = this.resizeStart.width - deltaX;
             if (newWidth < minW) newWidth = minW;
-
             const widthChange = newWidth - this.resizeStart.width;
             const newLeft = this.resizeStart.left - widthChange;
-
             this.windowNode.style.width = `${newWidth}px`;
             this.windowNode.style.left = `${newLeft}px`;
+            changed = true;
         }
 
         if (dir.includes('s')) {
             const newHeight = Math.max(minH, this.resizeStart.height + deltaY);
             this.windowNode.style.height = `${newHeight}px`;
-        }
-        else if (dir.includes('n')) {
+        } else if (dir.includes('n')) {
             let newHeight = this.resizeStart.height - deltaY;
             if (newHeight < minH) newHeight = minH;
-
             const heightChange = newHeight - this.resizeStart.height;
             const newTop = this.resizeStart.top - heightChange;
-
             this.windowNode.style.height = `${newHeight}px`;
             this.windowNode.style.top = `${newTop}px`;
+        }
+
+        // [NUEVO] Si hubo cambio y la ventana está dockeada (o afecta al layout), notificar
+        if (changed) {
+            window.dispatchEvent(new CustomEvent('layout-update'));
         }
     }
 
@@ -138,6 +116,9 @@ export default class WindowResizer {
             this.state.isResizing = false;
             this.activeDirection = null;
             document.body.style.cursor = '';
+
+            // Asegurar un último update al soltar
+            window.dispatchEvent(new CustomEvent('layout-update'));
         }
     }
 
@@ -146,8 +127,6 @@ export default class WindowResizer {
             window.removeEventListener('mousemove', this._binds.move);
             window.removeEventListener('mouseup', this._binds.end);
         }
-        if (this.handles) {
-            this.handles.forEach(h => h.remove());
-        }
+        if (this.handles) this.handles.forEach(h => h.remove());
     }
 }

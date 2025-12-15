@@ -4,90 +4,72 @@
 export default class Checkboard extends Phaser.GameObjects.TileSprite {
     /**
      * @param {Phaser.Scene} scene 
-     * @param {import('../../../play/camera/Camera.js').CameraManager} cameraManager 
+     * @param {import('../camera/camera.js').CameraManager} cameraManager 
      */
     constructor(scene, cameraManager) {
-        const key = 'gen_checkboard';
-        const size = 32;
+        const key = 'checkboard_pattern_native';
+        const patternSize = 64;
 
-        // 1. Generar la textura si no existe
+        // Tamaño del mundo (Límite visual y de cámara)
+        const worldSize = 21000;
+
+        // 1. Generación Vía DOM NATIVO
         if (!scene.textures.exists(key)) {
-            const graphics = scene.make.graphics({ x: 0, y: 0, add: false });
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = patternSize;
+                canvas.height = patternSize;
+                const ctx = canvas.getContext('2d');
 
-            graphics.fillStyle(0xffffff, 1);
-            graphics.fillRect(0, 0, size, size);
-            graphics.fillRect(size, size, size, size);
+                const half = patternSize / 2;
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, patternSize, patternSize);
 
-            graphics.fillStyle(0xdddddd, 1);
-            graphics.fillRect(size, 0, size, size);
-            graphics.fillRect(0, size, size, size);
+                ctx.fillStyle = '#DDDDDD';
+                ctx.fillRect(0, 0, half, half);
+                ctx.fillRect(half, half, half, half);
 
-            graphics.generateTexture(key, size * 2, size * 2);
-            graphics.destroy();
+                scene.textures.addCanvas(key, canvas);
+                canvas.remove();
+            } catch (e) {
+                console.error("[Checkboard] Error texture:", e);
+                // Fallback simple
+                if (!scene.textures.exists('pixel')) {
+                    const f = document.createElement('canvas'); f.width = 1; f.height = 1;
+                    scene.textures.addCanvas('pixel', f);
+                }
+                super(scene, 0, 0, worldSize, worldSize, 'pixel');
+                return;
+            }
         }
 
-        // 2. Inicializar TileSprite cubriendo toda la pantalla
-        super(scene, 0, 0, scene.scale.width, scene.scale.height, key);
+        // 2. Crear TileSprite
+        super(scene, 0, 0, worldSize, worldSize, key);
         scene.add.existing(this);
 
         this.cameraManager = cameraManager;
 
-        // 3. Configuración Visual (Encapsulada)
+        // 3. Configuración Visual
         this.setOrigin(0.5, 0.5)
-            .setPosition(scene.scale.width / 2, scene.scale.height / 2)
-            .setScrollFactor(0)  // Fijo en pantalla
-            .setDepth(-1000)     // Al fondo
-            .setAlpha(0.4);      // Transparencia
+            .setPosition(0, 0)
+            .setDepth(-1000)
+            .setAlpha(0.2);
 
-        // 4. Asignación a la Cámara del Juego
+        // 4. Configurar Cámaras
         if (this.cameraManager) {
+            // A. Que la UI ignore este objeto
             this.cameraManager.assignToGame(this);
+
+            // B. [NUEVO] Decirle a la cámara que respete este tamaño como límite
+            this.cameraManager.updateBounds(worldSize);
         }
 
-        // 5. Listener de Redimensionamiento
-        this.resizeListener = (gameSize) => {
-            this.setSize(gameSize.width, gameSize.height);
-            this.setPosition(gameSize.width / 2, gameSize.height / 2);
-        };
-        scene.scale.on('resize', this.resizeListener);
-
-        // 6. Limpieza automática
-        this.on('destroy', this.cleanup, this);
-        if (scene.events) {
-            scene.events.once('shutdown', this.cleanup, this);
-        }
+        console.log(`[Checkboard] Renderizado: ${worldSize}px`);
     }
 
-    /**
-     * Actualiza la posición y escala del patrón basándose en la cámara.
-     * Debe llamarse en el update() de la escena.
-     */
-    update() {
-        if (!this.cameraManager) return;
-
-        const cam = this.cameraManager.gameCamera;
-
-        // Sincronizar el patrón con el scroll
-        this.tilePositionX = cam.scrollX;
-        this.tilePositionY = cam.scrollY;
-
-        // Compensar el Zoom:
-        // 1. Escalamos el objeto inversamente para que siempre cubra la pantalla
-        this.setScale(1 / cam.zoom);
-
-        // 2. Escalamos el patrón (tile) directamente para simular el zoom visual
-        this.tileScaleX = cam.zoom;
-        this.tileScaleY = cam.zoom;
-    }
+    update() { }
 
     cleanup() {
-        // Remover el listener de resize específicamente
-        if (this.scene && this.resizeListener) {
-            this.scene.scale.off('resize', this.resizeListener);
-        }
-
-        if (this.scene) {
-            this.scene.events.off('shutdown', this.cleanup, this);
-        }
+        if (this.scene) this.destroy();
     }
 }

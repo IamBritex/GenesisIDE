@@ -15,7 +15,13 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            padding: 5px;
+            padding: 15px;
+            /* Aumentado un poco el padding para que respire */
+
+            /* [FIX] Color de fondo explícito para evitar transparencia */
+            background-color: var(--bg-window);
+            height: 100%;
+            box-sizing: border-box;
         }
 
         .input-group {
@@ -110,20 +116,15 @@
 
     <script>
         (function () {
-            // Referencias
-            // NOTA: En un entorno real de 'ModularWindow', estos IDs son globales,
-            // asegúrate de que no choquen si abres dos ventanas iguales.
             const btnSave = document.getElementById('btnSave');
             const btnCancel = document.getElementById('btnCancel');
             const nameInput = document.getElementById('entityName');
             const typeInput = document.getElementById('entityType');
 
-            // Función para cerrar buscando el contenedor .modular-window
             const closeWindow = () => {
-                // Buscamos el botón "X" que genera ModularWindow y le hacemos click
                 const myWindow = btnSave.closest('.modular-window');
                 if (myWindow) {
-                    const closeBtn = myWindow.querySelector('.win-btn.close');
+                    const closeBtn = myWindow.querySelector('.win-btn[data-action="close"]');
                     if (closeBtn) closeBtn.click();
                 }
             };
@@ -138,9 +139,6 @@
                     return;
                 }
 
-                console.log(`[Modal] Creando: ${name} (Tipo: ${type})`);
-
-                // Emitimos evento para que el IDE.js lo capture
                 const event = new CustomEvent('modal-save', {
                     detail: { name, type }
                 });
