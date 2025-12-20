@@ -27,7 +27,9 @@ export default class DockLayoutManager {
         this.updatePending = false;
         if (!this.scene || !this.scene.scale) return;
 
+        // 1. Usar la resolución interna del juego (ej. 1280)
         const gameWidth = this.scene.scale.width;
+
         const tabBar = this._getWindowById('tab-bar');
         if (!tabBar || !tabBar.windowNode) return;
 
@@ -39,32 +41,36 @@ export default class DockLayoutManager {
             if (win.config.id === 'tool-bar' || win.config.id === 'bottom-bar') return;
 
             const isDocked = win.windowNode.classList.contains('docked');
+            // Nota: offsetWidth es 0 si display es 'none', así que la verificación de visibilidad es implícita
             const isVisible = win.windowNode.style.display !== 'none';
 
             if (isDocked && isVisible && win.interaction && win.interaction.state) {
                 const side = win.interaction.state.dockSide;
-                const rect = win.windowNode.getBoundingClientRect();
+
+                // [CORRECCIÓN] Usar offsetWidth en lugar de getBoundingClientRect()
+                // offsetWidth devuelve el ancho CSS (coordenadas del juego)
+                // getBoundingClientRect devuelve el ancho renderizado en pantalla (afectado por el zoom)
+                const currentWidth = win.windowNode.offsetWidth;
 
                 if (side === 'left') {
-                    if (rect.width > leftOffset) leftOffset = rect.width;
+                    if (currentWidth > leftOffset) leftOffset = currentWidth;
                 }
                 if (side === 'right') {
-                    if (rect.width > rightOffset) rightOffset = rect.width;
+                    if (currentWidth > rightOffset) rightOffset = currentWidth;
                 }
             }
         });
 
-        // [GAP AUMENTADO] 4px para asegurar que no toque los bordes
-        const GAP = 43;
 
         let startX = leftOffset;
-        if (leftOffset > 0) startX += GAP;
+        if (leftOffset > 0) startX;
 
         let endLimit = gameWidth - rightOffset;
-        if (rightOffset > 0) endLimit -= GAP;
+        if (rightOffset > 0) endLimit;
 
         const newWidth = Math.max(0, endLimit - startX);
 
+        // Aplicar estilos
         tabBar.windowNode.style.left = `${startX}px`;
         tabBar.windowNode.style.width = `${newWidth}px`;
     }

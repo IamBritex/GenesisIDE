@@ -1,3 +1,6 @@
+/**
+ * source/funkin/ui/editors/utils/window/WindowResizer.js
+ */
 export default class WindowResizer {
     constructor(scene, windowNode, sharedState, bringToFrontCallback, config) {
         this.scene = scene;
@@ -50,6 +53,23 @@ export default class WindowResizer {
 
     _onStart(e) {
         if (e.button !== 0 || this.config.resizable === false) return;
+
+        // --- [LÓGICA DE DOCKING AGREGADA] ---
+        if (this.state.isDocked) {
+            const side = this.state.dockSide;
+            const dir = e.target.dataset.resizeDir;
+
+            // Si está a la izquierda, SOLO permitir redimensionar hacia el Este ('e')
+            if (side === 'left' && dir !== 'e') return;
+
+            // Si está a la derecha, SOLO permitir redimensionar hacia el Oeste ('w')
+            if (side === 'right' && dir !== 'w') return;
+
+            // Si hubiera docking arriba/abajo en el futuro, se añadiría aquí.
+            // Esto bloquea efectivamente esquinas y lados verticales.
+        }
+        // ------------------------------------
+
         e.stopPropagation(); e.preventDefault();
 
         this.state.isResizing = true;
@@ -105,7 +125,6 @@ export default class WindowResizer {
             this.windowNode.style.top = `${newTop}px`;
         }
 
-        // [NUEVO] Si hubo cambio y la ventana está dockeada (o afecta al layout), notificar
         if (changed) {
             window.dispatchEvent(new CustomEvent('layout-update'));
         }
@@ -117,7 +136,6 @@ export default class WindowResizer {
             this.activeDirection = null;
             document.body.style.cursor = '';
 
-            // Asegurar un último update al soltar
             window.dispatchEvent(new CustomEvent('layout-update'));
         }
     }

@@ -8,10 +8,11 @@ export default class WindowsPreload {
         scene.load.text('explorerHtml', 'public/ui/editors/explorer.html');
         scene.load.text('toolBarHtml', 'public/ui/editors/tool_bar.html');
         scene.load.text('bottomBarHtml', 'public/ui/editors/bottom_bar.html');
-        scene.load.text('propertiesHtml', 'public/ui/editors/properties.html');
-        scene.load.text('toastHtml', 'public/ui/toast.html');
 
-        // [NUEVO] Tab Bar
+        // [MODIFICADO] Ahora carga stage_properties.html
+        scene.load.text('propertiesHtml', 'public/ui/editors/stage_properties.html');
+
+        scene.load.text('toastHtml', 'public/ui/toast.html');
         scene.load.text('tabBarHtml', 'public/ui/editors/tabBar.html');
     }
 }

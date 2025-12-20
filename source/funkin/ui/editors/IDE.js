@@ -1,6 +1,5 @@
 import { GeneralPreload } from './utils/preload/GeneralPreload.js';
 import MouseHandler from './inputs/mouse.js';
-// [MODIFICADO] Nueva ruta de importación
 import { CameraManager } from './camera/camera.js';
 import Checkboard from './utils/checkboard.js';
 import DefaultWindowsOpened from './utils/window/DefaultWindowsOpened.js';
@@ -9,6 +8,9 @@ import { ToastManager } from './utils/Toast.js';
 import CleanStateManager from './managers/cleanStateManager.js';
 import EditorModes from './modes/editorModes.js';
 import DockLayoutManager from './managers/DockLayoutManager.js';
+
+// [CORRECCIÓN] Importar Properties
+import Properties from './components/UI/properties/Properties.js';
 
 export class IDE extends Phaser.Scene {
     constructor() {
@@ -20,6 +22,7 @@ export class IDE extends Phaser.Scene {
         this.editorModes = null;
         this.layoutManager = null;
         this.modalListener = null;
+        this.properties = null; // Referencia a Properties
     }
 
     preload() {
@@ -29,13 +32,7 @@ export class IDE extends Phaser.Scene {
     create() {
         // 1. Sistemas Core
         this.cameraManager = new CameraManager(this);
-        // Nota: el color de fondo ya se maneja dentro de CameraManager, 
-        // pero si quieres asegurarlo aquí, está bien.
-
-        // Fondo (Checkboard configura los límites de la cámara al crearse)
         this.checkboard = new Checkboard(this, this.cameraManager);
-
-        // Input
         new MouseHandler(this);
 
         // 2. Sistemas UI
@@ -45,6 +42,9 @@ export class IDE extends Phaser.Scene {
 
         // 3. Ventanas
         DefaultWindowsOpened.open(this);
+
+        // [CORRECCIÓN CRÍTICA] Inicializar Properties para que escuche los eventos
+        this.properties = new Properties(this);
 
         // 4. Eventos
         this._setupListeners();
@@ -71,6 +71,9 @@ export class IDE extends Phaser.Scene {
 
     shutdown() {
         CleanStateManager.clean(this);
+        if (this.properties) {
+            this.properties = null;
+        }
     }
 }
 

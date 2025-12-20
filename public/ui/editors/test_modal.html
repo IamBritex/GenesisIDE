@@ -6,87 +6,86 @@
     <behavior draggable="true" />
     <controls close="true" minimize="true" />
     <title>Nueva Entidad</title>
-
-    <style>
-        /* Estilos específicos para este modal */
-        .modal-container {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #e0e0e0;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            padding: 15px;
-            /* Aumentado un poco el padding para que respire */
-
-            /* [FIX] Color de fondo explícito para evitar transparencia */
-            background-color: var(--bg-window);
-            height: 100%;
-            box-sizing: border-box;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .input-group label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #aaa;
-            margin-left: 2px;
-        }
-
-        .custom-input {
-            background: #1e1e1e;
-            border: 1px solid #333;
-            border-radius: 4px;
-            padding: 8px 10px;
-            color: white;
-            font-size: 0.95rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .custom-input:focus {
-            border-color: #5b9bd5;
-        }
-
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #333;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            border: none;
-            transition: opacity 0.2s;
-        }
-
-        .btn:hover {
-            opacity: 0.8;
-        }
-
-        .btn-cancel {
-            background: transparent;
-            color: #aaa;
-            border: 1px solid #444;
-        }
-
-        .btn-confirm {
-            background: #5b9bd5;
-            color: white;
-            font-weight: 600;
-        }
-    </style>
 </window-config>
+<style>
+    /* Estilos específicos para este modal */
+    .modal-container {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #e0e0e0;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+
+        /* Esto ahora se aplicará correctamente */
+        background-color: var(--bg-window);
+        height: 100%;
+        box-sizing: border-box;
+    }
+
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    /* ... resto de estilos igual ... */
+    .input-group label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #aaa;
+        margin-left: 2px;
+    }
+
+    .custom-input {
+        background: #1e1e1e;
+        border: 1px solid #333;
+        border-radius: 4px;
+        padding: 8px 10px;
+        color: white;
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .custom-input:focus {
+        border-color: #5b9bd5;
+    }
+
+    .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #333;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border: none;
+        transition: opacity 0.2s;
+    }
+
+    .btn:hover {
+        opacity: 0.8;
+    }
+
+    .btn-cancel {
+        background: transparent;
+        color: #aaa;
+        border: 1px solid #444;
+    }
+
+    .btn-confirm {
+        background: #5b9bd5;
+        color: white;
+        font-weight: 600;
+    }
+</style>
 
 <body>
     <div class="modal-container">

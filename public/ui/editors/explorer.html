@@ -1,46 +1,95 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
 <window-config>
-    <title>Asset Explorer</title>
+    <title>Explorer</title>
     <layout width="260" height="450" x="20" y="60" />
     <behavior draggable="true" overlay="false" />
     <controls minimize="true" close="true" />
 </window-config>
 
 <style>
+    /* --- ESTRUCTURA GENERAL --- */
     .explorer-wrapper {
         display: flex;
         flex-direction: column;
         height: 100%;
-        background-color: var(--bg-window);
-        color: var(--text-muted);
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #181818;
+        color: #CCCCCC;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
         font-size: 13px;
         overflow: hidden;
+        user-select: none;
+        text-align: left;
     }
 
     .explorer-toolbar {
         display: flex;
         align-items: center;
-        padding: 6px 8px;
-        background-color: var(--bg-header);
-        border-bottom: 1px solid var(--border-subtle);
-        gap: 8px;
+        justify-content: space-between;
+        padding: 0 15px;
+        height: 35px;
+        background-color: #252526;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
         flex-shrink: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    .tool-icon {
+    .toolbar-actions {
+        display: none;
+    }
+
+    .toolbar-actions .material-icons {
+        font-size: 16px;
         cursor: pointer;
-        font-size: 18px;
-        color: var(--text-muted);
-        transition: color 0.2s;
+        margin-left: 6px;
+        opacity: 0.7;
     }
 
-    .tool-icon:hover {
-        color: var(--text-main);
+    .toolbar-actions .material-icons:hover {
+        opacity: 1;
     }
 
-    .drop-zone-container {
+    /* --- SCROLLBAR --- */
+    .explorer-content {
         flex: 1;
+        position: relative;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .explorer-content::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .explorer-content::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .explorer-content::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.05);
+        border: 2px solid transparent;
+        background-clip: content-box;
+        border-radius: 10px;
+    }
+
+    .explorer-content:hover::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .explorer-content::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* --- PLACEHOLDER --- */
+    .drop-zone-container {
         display: flex;
+        flex: 1;
+        height: 100%;
         padding: 15px;
         box-sizing: border-box;
         overflow: hidden;
@@ -60,13 +109,13 @@
         transition: all 0.2s ease-out;
         cursor: pointer;
         background-color: rgba(0, 0, 0, 0.1);
-        user-select: none;
     }
 
-    .drop-zone:hover {
-        border-color: var(--text-main);
-        background-color: rgba(255, 255, 255, 0.05);
-        color: var(--text-main);
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+        border-color: #007acc;
+        background-color: rgba(0, 122, 204, 0.1);
+        color: #fff;
         transform: scale(0.99);
     }
 
@@ -83,77 +132,614 @@
         pointer-events: none;
     }
 
-    .drop-subtext {
-        font-size: 11px;
-        opacity: 0.5;
-        margin-top: 5px;
+    /* --- ARBOL Y ITEMS --- */
+    #treeRoot {
+        display: none;
+        padding-top: 5px;
+        padding-bottom: 20px;
+        /* Espacio extra al final */
+        width: 100%;
     }
 
-    /* [NUEVO] Estilos para el pie de página del explorador */
-    .explorer-footer {
-        padding: 12px;
-        border-top: 1px solid var(--border-subtle);
-        background-color: var(--bg-header);
+    .tree-node {
+        display: block;
+        width: 100%;
+    }
+
+    .tree-item {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        text-align: left;
+        width: 100%;
+        box-sizing: border-box;
+        cursor: pointer;
+        padding-top: 3px;
+        padding-bottom: 3px;
+        padding-right: 10px;
+        white-space: nowrap;
+        border: 1px solid transparent;
+        color: #CCCCCC;
+        position: relative;
+    }
+
+    /* Feedback visual Drag & Drop */
+    .tree-item.drag-target-folder {
+        background-color: rgba(0, 122, 204, 0.4) !important;
+        outline: 1px dashed #007acc;
+    }
+
+    .tree-item.folder:hover {
+        background-color: #2A2D2E;
+    }
+
+    .tree-item.file:hover {
+        background-color: #2A2D2E;
+    }
+
+    .tree-item.file.selected {
+        background-color: #37373D;
+        color: #FFFFFF;
+    }
+
+    .tree-arrow {
+        font-size: 16px;
+        color: #C5C5C5;
+        width: 22px;
+        min-width: 22px;
+        height: 22px;
         display: flex;
         justify-content: center;
+        align-items: center;
+        opacity: 0.8;
+        margin-right: 2px;
+        transition: transform 0.1s ease-in-out;
         flex-shrink: 0;
     }
 
-    .explorer-footer .btn {
+    .tree-node.open>.tree-item.folder .tree-arrow {
+        transform: rotate(90deg);
+    }
+
+    .tree-spacer {
+        width: 22px;
+        min-width: 22px;
+        height: 22px;
+        margin-right: 2px;
+        flex-shrink: 0;
+        display: block;
+    }
+
+    .tree-icon {
+        font-size: 16px;
+        margin-right: 6px;
+        color: #C5C5C5;
+        flex-shrink: 0;
+    }
+
+    /* Colores Iconos */
+    .icon-folder {
+        color: #dcb67a;
+    }
+
+    .icon-js {
+        color: #f1e05a;
+    }
+
+    .icon-json {
+        color: #cbcb41;
+    }
+
+    .icon-html {
+        color: #e34c26;
+    }
+
+    .icon-css {
+        color: #563d7c;
+    }
+
+    .icon-img {
+        color: #b07219;
+    }
+
+    .icon-default {
+        color: #cccccc;
+    }
+
+    .tree-label {
+        line-height: 18px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        flex-grow: 1;
+    }
+
+    /* Input para renombrar */
+    .rename-input {
+        background: #3c3c3c;
+        border: 1px solid #007acc;
+        color: white;
+        font-family: inherit;
+        font-size: inherit;
+        padding: 0 4px;
+        outline: none;
         width: 100%;
+        box-sizing: border-box;
+        margin-left: -5px;
+        /* Ajuste visual */
+    }
+
+    .tree-children {
+        display: none;
+        width: 100%;
+    }
+
+    .tree-node.open>.tree-children {
+        display: block;
+    }
+
+    /* --- CONTEXT MENU --- */
+    #contextMenu {
+        display: none;
+        position: fixed;
+        background: #252526;
+        border: 1px solid #454545;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        min-width: 150px;
+        padding: 4px 0;
+        border-radius: 4px;
+    }
+
+    .ctx-item {
+        padding: 6px 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
         font-size: 12px;
-        height: 36px;
+        color: #cccccc;
+    }
+
+    .ctx-item:hover {
+        background-color: #007acc;
+        color: white;
+    }
+
+    .ctx-separator {
+        height: 1px;
+        background-color: #454545;
+        margin: 4px 0;
     }
 </style>
 
 <div class="explorer-wrapper">
     <div class="explorer-toolbar">
-        <span class="material-icons tool-icon" title="Refresh">refresh</span>
-        <div style="flex:1"></div>
-        <span class="material-icons tool-icon" title="Settings">settings</span>
-    </div>
-
-    <div class="drop-zone-container">
-        <div class="drop-zone" id="fileDropArea">
-            <span class="material-icons drop-icon">folder_open</span>
-            <div class="drop-text">
-                Click to browse or drag your files here
-            </div>
-            <input type="file" id="fileInput" multiple style="display: none;">
+        <span id="explorerTitle">EXPLORER</span>
+        <div class="toolbar-actions" id="toolbarActions">
+            <span class="material-icons" id="btnCollapse" title="Collapse All">unfold_less</span>
         </div>
     </div>
 
-    <div class="explorer-footer">
-        <button class="btn btn-confirm" id="createTemplateBtn">
-            New project
-        </button>
+    <div class="explorer-content" id="explorerContent">
+        <div class="drop-zone-container" id="placeholderContainer">
+            <div class="drop-zone" id="fileDropArea">
+                <span class="material-icons drop-icon">folder_open</span>
+                <div class="drop-text">
+                    Click to browse or drag your files here
+                </div>
+                <input type="file" id="fileInput" webkitdirectory directory multiple style="display: none;">
+            </div>
+        </div>
+
+        <div id="treeRoot"></div>
     </div>
+</div>
+
+<div id="contextMenu">
+    <div class="ctx-item" id="ctxRename"><span class="material-icons" style="font-size:14px">edit</span> Rename</div>
+    <div class="ctx-separator"></div>
+    <div class="ctx-item" id="ctxDelete"><span class="material-icons" style="font-size:14px">delete</span> Delete</div>
 </div>
 
 <script>
     (function () {
+        const placeholderContainer = document.getElementById('placeholderContainer');
         const dropZone = document.getElementById('fileDropArea');
         const fileInput = document.getElementById('fileInput');
-        const createBtn = document.getElementById('createTemplateBtn');
+        const treeRoot = document.getElementById('treeRoot');
+        const btnCollapse = document.getElementById('btnCollapse');
+        const explorerTitle = document.getElementById('explorerTitle');
+        const toolbarActions = document.getElementById('toolbarActions');
+        const contextMenu = document.getElementById('contextMenu');
 
-        if (dropZone && fileInput) {
-            dropZone.addEventListener('click', () => {
-                fileInput.click();
-            });
+        // Estado Global de Archivos: { "path/to/file": FileObject, ... }
+        let globalFilesMap = {};
 
-            fileInput.addEventListener('change', (e) => {
-                if (e.target.files.length > 0) {
-                    console.log("[Explorer] Archivos seleccionados:", e.target.files.length);
+        // Variables para drag & drop interno
+        let draggedItemPath = null;
+
+        // Variables para menú contextual
+        let contextTarget = null; // Ruta del item bajo el click derecho
+
+        // --- MANEJO DE EVENTOS INICIALES ---
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); });
+
+        dropZone.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const items = e.dataTransfer.items;
+            if (!items) return;
+
+            const entry = items[0].webkitGetAsEntry();
+            globalFilesMap = {}; // Resetear mapa nuevo
+
+            if (entry && entry.isFile && entry.name.endsWith('.zip')) {
+                const file = items[0].getAsFile();
+                await processZip(file, globalFilesMap);
+            } else if (entry) {
+                await scanFiles(entry, globalFilesMap);
+            }
+            refreshTree();
+        });
+
+        fileInput.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            globalFilesMap = {};
+            files.forEach(f => globalFilesMap[f.webkitRelativePath || f.name] = f);
+            refreshTree();
+        });
+
+        // --- SISTEMA DE RENOMBRADO Y MENÚ ---
+
+        // Ocultar menú al hacer click fuera
+        window.addEventListener('click', () => contextMenu.style.display = 'none');
+
+        document.getElementById('ctxRename').addEventListener('click', () => {
+            if (contextTarget) startRename(contextTarget);
+        });
+
+        document.getElementById('ctxDelete').addEventListener('click', () => {
+            if (contextTarget) {
+                // Borrar recursivamente si es carpeta, o simple si es archivo
+                const keysToDelete = Object.keys(globalFilesMap).filter(k => k === contextTarget || k.startsWith(contextTarget + '/'));
+                keysToDelete.forEach(k => delete globalFilesMap[k]);
+                refreshTree();
+            }
+        });
+
+        function startRename(path) {
+            // Buscar el elemento DOM correspondiente
+            const treeItem = document.querySelector(`.tree-item[data-path="${path}"]`);
+            if (!treeItem) return;
+
+            const label = treeItem.querySelector('.tree-label');
+            const oldName = label.textContent;
+
+            // Crear input
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = oldName;
+            input.className = 'rename-input';
+
+            // Reemplazar label con input
+            label.style.display = 'none';
+            treeItem.appendChild(input);
+            input.focus();
+            input.select(); // Seleccionar texto para reemplazar rápido
+
+            // Manejar confirmación
+            const commit = () => {
+                const newName = input.value.trim();
+                if (newName && newName !== oldName) {
+                    performRename(path, newName);
+                } else {
+                    cancel();
+                }
+            };
+
+            const cancel = () => {
+                input.remove();
+                label.style.display = 'block';
+            };
+
+            input.addEventListener('blur', commit);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    input.blur(); // Dispara commit
+                } else if (e.key === 'Escape') {
+                    input.removeEventListener('blur', commit); // Evitar doble llamada
+                    cancel();
                 }
             });
+
+            // Evitar que el drag del padre interfiera con la selección de texto
+            input.addEventListener('mousedown', (e) => e.stopPropagation());
         }
 
-        // [NUEVO] Listener para el botón
-        if (createBtn) {
-            createBtn.addEventListener('click', () => {
-                console.log("[Explorer] Create project template clicked");
-                // Aquí puedes disparar un evento o llamar a la lógica de creación
+        function performRename(oldPath, newName) {
+            // Calcular nueva ruta base
+            const parts = oldPath.split('/');
+            parts.pop(); // Quitar nombre viejo
+            const basePath = parts.join('/');
+            const newPathStart = basePath ? `${basePath}/${newName}` : newName;
+
+            // Crear nuevo mapa actualizado
+            const newMap = {};
+
+            Object.keys(globalFilesMap).forEach(key => {
+                if (key === oldPath || key.startsWith(oldPath + '/')) {
+                    // Es el item o un hijo: Cambiar prefijo
+                    const suffix = key.substring(oldPath.length);
+                    const newKey = newPathStart + suffix;
+                    newMap[newKey] = globalFilesMap[key];
+                } else {
+                    // Item no afectado
+                    newMap[key] = globalFilesMap[key];
+                }
+            });
+
+            globalFilesMap = newMap;
+            refreshTree();
+        }
+
+
+        // --- SISTEMA DE DRAG & DROP INTERNO ---
+
+        function handleDragStart(e, path) {
+            e.stopPropagation();
+            draggedItemPath = path;
+            e.dataTransfer.effectAllowed = 'move';
+            // Setear dato dummy para compatibilidad
+            e.dataTransfer.setData('text/plain', path);
+        }
+
+        function handleDragOver(e, isFolder, targetPath) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Solo permitir soltar sobre carpetas y no sobre uno mismo o sus hijos
+            if (isFolder && draggedItemPath !== targetPath && !targetPath.startsWith(draggedItemPath + '/')) {
+                const item = e.currentTarget;
+                item.classList.add('drag-target-folder');
+                e.dataTransfer.dropEffect = 'move';
+            } else {
+                e.dataTransfer.dropEffect = 'none';
+            }
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-target-folder');
+        }
+
+        function handleDrop(e, targetPath) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.currentTarget.classList.remove('drag-target-folder');
+
+            if (!draggedItemPath || draggedItemPath === targetPath) return;
+
+            // Realizar movimiento
+            performMove(draggedItemPath, targetPath);
+            draggedItemPath = null;
+        }
+
+        function performMove(sourcePath, targetFolder) {
+            // Extraer nombre del archivo/carpeta movido
+            const sourceName = sourcePath.split('/').pop();
+            const newPrefix = targetFolder ? `${targetFolder}/${sourceName}` : sourceName;
+
+            const newMap = {};
+
+            Object.keys(globalFilesMap).forEach(key => {
+                if (key === sourcePath || key.startsWith(sourcePath + '/')) {
+                    // Reemplazar la parte 'sourcePath' con 'newPrefix'
+                    // Ejemplo: sourcePath="A", target="B".  key="A/img.png" -> "B/A/img.png"
+                    // PERO espera, si muevo "File" a "Folder", la nueva ruta es "Folder/File"
+
+                    const relativeSuffix = key.substring(sourcePath.length);
+                    const newKey = newPrefix + relativeSuffix;
+                    newMap[newKey] = globalFilesMap[key];
+                } else {
+                    newMap[key] = globalFilesMap[key];
+                }
+            });
+
+            globalFilesMap = newMap;
+            refreshTree();
+        }
+
+
+        // --- RENDERIZADO ---
+
+        function refreshTree() {
+            if (Object.keys(globalFilesMap).length > 0) {
+                placeholderContainer.style.display = 'none';
+                treeRoot.style.display = 'block';
+                toolbarActions.style.display = 'block';
+                treeRoot.innerHTML = '';
+
+                const treeStructure = buildTreeFromPaths(Object.keys(globalFilesMap));
+                const rootKeys = Object.keys(treeStructure);
+
+                // Root Flattening
+                if (rootKeys.length === 1 && !treeStructure[rootKeys[0]].isFile) {
+                    const rootNode = treeStructure[rootKeys[0]];
+                    explorerTitle.textContent = rootNode.name;
+                    // Pasamos el prefijo base para que los paths internos sean correctos
+                    renderTree(rootNode.children, treeRoot, 0, rootNode.name);
+                } else {
+                    explorerTitle.textContent = "EXPLORER";
+                    renderTree(treeStructure, treeRoot, 0, "");
+                }
+            }
+        }
+
+        function renderTree(nodeList, container, level, currentPathPrefix) {
+            const keys = Object.keys(nodeList).sort((a, b) => {
+                const nodeA = nodeList[a];
+                const nodeB = nodeList[b];
+                if (nodeA.isFile === nodeB.isFile) return a.localeCompare(b);
+                return nodeA.isFile ? 1 : -1;
+            });
+
+            keys.forEach(key => {
+                const node = nodeList[key];
+                const wrapper = document.createElement('div');
+                wrapper.className = 'tree-node';
+
+                // Construir ruta completa para identificación
+                const fullPath = currentPathPrefix ? `${currentPathPrefix}/${node.name}` : node.name;
+
+                const itemRow = document.createElement('div');
+                itemRow.className = 'tree-item';
+                itemRow.dataset.path = fullPath; // IMPORTANTE para lógica
+
+                // Configurar Drag & Drop
+                itemRow.draggable = true;
+                itemRow.addEventListener('dragstart', (e) => handleDragStart(e, fullPath));
+
+                // Clases específicas
+                if (node.isFile) {
+                    itemRow.classList.add('file');
+                } else {
+                    itemRow.classList.add('folder');
+                    // Eventos drop solo en carpetas
+                    itemRow.addEventListener('dragover', (e) => handleDragOver(e, true, fullPath));
+                    itemRow.addEventListener('dragleave', handleDragLeave);
+                    itemRow.addEventListener('drop', (e) => handleDrop(e, fullPath));
+                }
+
+                itemRow.style.paddingLeft = `${level * 14 + 10}px`;
+
+                // Evento Context Menu
+                itemRow.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    contextTarget = fullPath;
+                    // Posicionar menú
+                    contextMenu.style.left = `${e.clientX}px`;
+                    contextMenu.style.top = `${e.clientY}px`;
+                    contextMenu.style.display = 'block';
+                });
+
+                // 1. FLECHAS / SPACER
+                if (!node.isFile) {
+                    const arrow = document.createElement('span');
+                    arrow.className = 'material-icons tree-arrow';
+                    arrow.textContent = 'chevron_right';
+                    itemRow.appendChild(arrow);
+                    itemRow.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        wrapper.classList.toggle('open');
+                    });
+                } else {
+                    const spacer = document.createElement('span');
+                    spacer.className = 'tree-spacer';
+                    itemRow.appendChild(spacer);
+                    itemRow.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        document.querySelectorAll('.tree-item.file').forEach(el => el.classList.remove('selected'));
+                        itemRow.classList.add('selected');
+                        console.log("Seleccionado:", fullPath);
+                    });
+                }
+
+                // 2. ICONO
+                const icon = document.createElement('span');
+                icon.className = 'material-icons tree-icon';
+                const iconData = getIconForFile(node.name, node.isFile);
+                icon.textContent = iconData.icon;
+                icon.classList.add(iconData.class);
+                itemRow.appendChild(icon);
+
+                // 3. ETIQUETA
+                const label = document.createElement('span');
+                label.className = 'tree-label';
+                label.textContent = node.name;
+                itemRow.appendChild(label);
+
+                wrapper.appendChild(itemRow);
+
+                // 4. HIJOS
+                if (!node.isFile) {
+                    const childrenContainer = document.createElement('div');
+                    childrenContainer.className = 'tree-children';
+                    renderTree(node.children, childrenContainer, level + 1, fullPath);
+                    wrapper.appendChild(childrenContainer);
+                }
+
+                container.appendChild(wrapper);
             });
         }
+
+        // --- UTILIDADES ---
+        async function processZip(file, map) {
+            if (!window.JSZip) return console.error("JSZip missing");
+            const zip = await JSZip.loadAsync(file);
+            zip.forEach((relativePath, zipEntry) => {
+                if (!zipEntry.dir) map[relativePath] = "zip_content";
+            });
+        }
+
+        async function scanFiles(entry, map) {
+            if (entry.isFile) {
+                let cleanPath = entry.fullPath;
+                if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
+                map[cleanPath] = entry;
+            } else if (entry.isDirectory) {
+                const dirReader = entry.createReader();
+                const entries = await readAllEntries(dirReader);
+                for (const child of entries) await scanFiles(child, map);
+            }
+        }
+
+        function readAllEntries(dirReader) {
+            return new Promise((resolve) => {
+                let entries = [];
+                const read = () => {
+                    dirReader.readEntries(result => {
+                        if (!result.length) resolve(entries);
+                        else { entries = entries.concat(result); read(); }
+                    });
+                };
+                read();
+            });
+        }
+
+        function buildTreeFromPaths(paths) {
+            const root = {};
+            paths.forEach(path => {
+                const parts = path.split('/');
+                let current = root;
+                parts.forEach((part, index) => {
+                    if (!current[part]) {
+                        current[part] = { name: part, children: {}, isFile: index === parts.length - 1 };
+                    }
+                    current = current[part].children;
+                });
+            });
+            return root;
+        }
+
+        function getIconForFile(filename, isFile) {
+            if (!isFile) return { icon: 'folder', class: 'icon-folder' };
+            const ext = filename.split('.').pop().toLowerCase();
+            switch (ext) {
+                case 'js': return { icon: 'description', class: 'icon-js' };
+                case 'json': return { icon: 'data_object', class: 'icon-json' };
+                case 'html': return { icon: 'code', class: 'icon-html' };
+                case 'css': return { icon: 'style', class: 'icon-css' };
+                case 'png': case 'jpg': return { icon: 'image', class: 'icon-img' };
+                case 'md': return { icon: 'info', class: 'icon-default' };
+                default: return { icon: 'insert_drive_file', class: 'icon-default' };
+            }
+        }
+
+        btnCollapse.addEventListener('click', () => {
+            document.querySelectorAll('.tree-node.open').forEach(n => n.classList.remove('open'));
+        });
     })();
 </script>
