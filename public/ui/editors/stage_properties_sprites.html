@@ -1,0 +1,205 @@
+<style>
+    .anim-list-container {
+        background: var(--bg-input);
+        border: 1px solid var(--border-subtle);
+        border-radius: 4px;
+        height: 140px;
+        overflow-y: auto;
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .anim-list-container::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .anim-list-container::-webkit-scrollbar-thumb {
+        background: #444;
+        border-radius: 3px;
+    }
+
+    .anim-card {
+        background: var(--bg-window);
+        border: 1px solid var(--border-subtle);
+        padding: 8px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.1s ease;
+        font-size: 11px;
+        user-select: none;
+        color: var(--text-muted);
+    }
+
+    .anim-card:hover {
+        background: var(--bg-hover);
+        border-color: #555;
+        color: var(--text-main);
+        transform: translateX(2px);
+    }
+
+    .anim-card.active {
+        background: var(--accent-color);
+        color: var(--accent-inverse);
+        border-color: var(--accent-color);
+        font-weight: bold;
+        transform: translateX(0);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .anim-card .anim-icon {
+        font-size: 14px;
+        opacity: 0.5;
+    }
+
+    .anim-card.active .anim-icon {
+        opacity: 1;
+    }
+</style>
+
+<div class="properties-container">
+    <div class="group-section">
+        <div class="group-header" onclick="window.toggleGroup(this)">
+            <i class="material-icons">transform</i> Transform
+        </div>
+        <div class="group-content">
+            <div class="prop-row"><label>X</label><input type="number" id="propX" class="prop-input"></div>
+            <div class="prop-row"><label>Y</label><input type="number" id="propY" class="prop-input"></div>
+
+            <div class="prop-row full-width">
+                <label>Scale</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <div style="flex: 1; display: flex; align-items: center; gap: 4px;">
+                        <span style="font-size: 9px; color: var(--text-muted);">X</span>
+                        <input type="number" id="propScaleX" class="prop-input" step="0.05">
+                    </div>
+                    <div id="btnLinkScale"
+                        style="cursor: pointer; color: var(--text-muted); display: flex; align-items: center;"
+                        title="Link Scale">
+                        <i class="material-icons" style="font-size: 16px;">link</i>
+                    </div>
+                    <div style="flex: 1; display: flex; align-items: center; gap: 4px;">
+                        <span style="font-size: 9px; color: var(--text-muted);">Y</span>
+                        <input type="number" id="propScaleY" class="prop-input" step="0.05">
+                    </div>
+                </div>
+            </div>
+
+            <div class="prop-row full-width"><label>Angle</label><input type="number" id="propAngle" class="prop-input">
+            </div>
+        </div>
+    </div>
+
+    <div class="group-section">
+        <div class="group-header" onclick="window.toggleGroup(this)">
+            <i class="material-icons">visibility</i> Visuals
+        </div>
+        <div class="group-content">
+            <div class="prop-row full-width"><label>Alpha</label><input type="range" id="propAlpha" class="prop-range"
+                    min="0" max="1" step="0.01"></div>
+            <div class="prop-row"><label>Layer</label><input type="number" id="propLayer" class="prop-input" step="1">
+            </div>
+
+            <div class="prop-row full-width">
+                <label>Scroll Factor</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <div style="flex: 1; display: flex; align-items: center; gap: 4px;">
+                        <span style="font-size: 9px; color: var(--text-muted);">X</span>
+                        <input type="number" id="propScrollX" class="prop-input" step="0.1">
+                    </div>
+                    <div id="btnLinkScroll"
+                        style="cursor: pointer; color: var(--text-muted); display: flex; align-items: center;"
+                        title="Link Scroll">
+                        <i class="material-icons" style="font-size: 16px;">link</i>
+                    </div>
+                    <div style="flex: 1; display: flex; align-items: center; gap: 4px;">
+                        <span style="font-size: 9px; color: var(--text-muted);">Y</span>
+                        <input type="number" id="propScrollY" class="prop-input" step="0.1">
+                    </div>
+                </div>
+            </div>
+
+            <div class="prop-row full-width">
+                <div style="display:flex; gap:15px; margin-top:5px;">
+                    <label class="checkbox-label"><input type="checkbox" id="propFlipX"> Flip X</label>
+                    <label class="checkbox-label"><input type="checkbox" id="propFlipY"> Flip Y</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="group-section">
+        <div class="group-header" onclick="window.toggleGroup(this)">
+            <i class="material-icons">animation</i> Spritesheet Source
+        </div>
+        <div class="group-content">
+            <div class="prop-row full-width">
+                <input type="text" id="propType" class="prop-input" readonly
+                    style="opacity: 0.8; font-family: monospace;">
+            </div>
+        </div>
+    </div>
+
+    <div class="group-section">
+        <div class="group-header" onclick="window.toggleGroup(this)">
+            <i class="material-icons">movie_filter</i> Animation Config
+        </div>
+        <div class="group-content">
+            <div class="prop-row">
+                <label>Play Mode</label>
+                <select id="anim_mode" class="prop-input">
+                    <option value="None">None</option>
+                    <option value="Loop">Loop</option>
+                    <option value="Beat">Beat</option>
+                </select>
+            </div>
+            <div class="prop-row">
+                <label>FPS</label>
+                <input type="number" id="anim_fps" class="prop-input" value="24">
+            </div>
+            <div class="prop-row full-width">
+                <label>Beat Steps</label>
+                <input type="text" id="anim_beats" class="prop-input" placeholder="1">
+            </div>
+
+            <hr style="grid-column: span 2; border: 0; border-top: 1px solid var(--border-subtle); margin: 5px 0;">
+
+            <div class="prop-row full-width">
+                <label style="display: flex; justify-content: space-between;">
+                    Animations Playlist <span style="font-size: 9px; opacity: 0.7;">(Click to Edit)</span>
+                </label>
+                <div id="anim_list_container" class="anim-list-container"></div>
+                <div style="display: flex; gap: 5px; margin-top: 6px;">
+                    <button id="btn_add_anim" class="prop-button" style="flex:1;">+ Add</button>
+                    <button id="btn_remove_anim" class="prop-button"
+                        style="flex:1; background: #5a2e2e; border-color:#844;">- Remove</button>
+                </div>
+            </div>
+
+            <div id="anim_detail_container"
+                style="grid-column: span 2; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px; margin-top: 5px; display: none; border: 1px solid var(--border-subtle);">
+                <div
+                    style="font-size: 10px; font-weight: bold; margin-bottom: 5px; text-transform: uppercase; color: var(--accent-color);">
+                    Edit: <span id="lbl_editing_anim"></span>
+                </div>
+                <div class="prop-row full-width">
+                    <label>Key Name</label>
+                    <input type="text" id="curr_anim_key" class="prop-input" readonly
+                        style="opacity: 0.6; cursor: not-allowed;">
+                </div>
+                <div class="prop-row full-width">
+                    <label>XML Prefix</label>
+                    <input type="text" id="curr_anim_prefix" class="prop-input">
+                </div>
+                <div class="prop-row full-width">
+                    <label>Indices</label>
+                    <input type="text" id="curr_anim_indices" class="prop-input">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

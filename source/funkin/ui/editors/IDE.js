@@ -8,9 +8,10 @@ import { ToastManager } from './utils/Toast.js';
 import CleanStateManager from './managers/cleanStateManager.js';
 import EditorModes from './modes/editorModes.js';
 import DockLayoutManager from './managers/DockLayoutManager.js';
-
-// [CORRECCIÓN] Importar Properties
 import Properties from './components/UI/properties/Properties.js';
+
+// [NUEVO] Importamos el gestor de pestañas
+import TabBar from './components/UI/tabBar/tabbar.js';
 
 export class IDE extends Phaser.Scene {
     constructor() {
@@ -22,7 +23,10 @@ export class IDE extends Phaser.Scene {
         this.editorModes = null;
         this.layoutManager = null;
         this.modalListener = null;
-        this.properties = null; // Referencia a Properties
+        this.properties = null;
+
+        // [NUEVO] Referencia al TabBar
+        this.tabBar = null;
     }
 
     preload() {
@@ -43,7 +47,13 @@ export class IDE extends Phaser.Scene {
         // 3. Ventanas
         DefaultWindowsOpened.open(this);
 
-        // [CORRECCIÓN CRÍTICA] Inicializar Properties para que escuche los eventos
+        // [NUEVO] Inicializar TabBar
+        // Usamos un pequeño delay para asegurar que DefaultWindowsOpened haya creado el HTML
+        this.time.delayedCall(100, () => {
+            this.tabBar = new TabBar(this);
+        });
+
+        // Inicializar Properties para que escuche los eventos
         this.properties = new Properties(this);
 
         // 4. Eventos
@@ -73,6 +83,11 @@ export class IDE extends Phaser.Scene {
         CleanStateManager.clean(this);
         if (this.properties) {
             this.properties = null;
+        }
+        // [NUEVO] Limpiar TabBar al salir
+        if (this.tabBar) {
+            this.tabBar.destroy();
+            this.tabBar = null;
         }
     }
 }

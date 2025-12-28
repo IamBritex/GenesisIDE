@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html>
+<window-config>
+    <title>Animation Manager</title>
+    <layout width="520" height="auto" />
+    <behavior draggable="true" overlay="true" />
+    <controls title="false" minimize="false" close="false" />
+</window-config>
+
+<style>
+    :host,
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: var(--bg-window, #202020);
+        height: 100%;
+        width: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    .modal-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+        color: var(--text-main);
+        font-family: var(--font-main);
+        height: 100%;
+        background-color: var(--bg-window);
+    }
+
+    /* --- ESTILOS COMUNES --- */
+    .header-title {
+        font-size: 13px;
+        font-weight: bold;
+        color: var(--accent-color);
+        text-transform: uppercase;
+        border-bottom: 1px solid var(--border-subtle);
+        padding-bottom: 6px;
+        margin-bottom: 2px;
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 5px;
+        padding-top: 8px;
+        border-top: 1px solid var(--border-subtle);
+    }
+
+    .btn-modal {
+        padding: 6px 18px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+
+    .btn-cancel {
+        background: transparent;
+        border: 1px solid var(--border-subtle);
+        color: var(--text-muted);
+    }
+
+    .btn-cancel:hover {
+        background: var(--bg-hover);
+        color: var(--text-main);
+    }
+
+    .btn-accept {
+        background: var(--accent-color);
+        color: var(--accent-inverse);
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    .btn-accept.ready {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .btn-accept.ready:hover {
+        filter: brightness(1.2);
+    }
+
+    .btn-danger {
+        background: #d32f2f;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #b71c1c;
+    }
+
+    /* --- ESTILOS VISTA SELECCION --- */
+    .section-label {
+        font-size: 10px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .anim-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 6px;
+        max-height: 280px;
+        min-height: 100px;
+        overflow-y: auto;
+        background: var(--bg-input);
+        border: 1px solid var(--border-subtle);
+        padding: 6px;
+        border-radius: 4px;
+    }
+
+    .anim-grid::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .anim-grid::-webkit-scrollbar-thumb {
+        background: #555;
+        border-radius: 3px;
+    }
+
+    .xml-card {
+        background: var(--bg-window);
+        border: 1px solid var(--border-subtle);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.1s;
+        user-select: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 5px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .xml-card:hover {
+        background: var(--bg-hover);
+        border-color: #888;
+        transform: translateY(-1px);
+    }
+
+    .xml-card.selected {
+        background: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    }
+
+    .thumb-container {
+        width: 100%;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 5px;
+        background: repeating-conic-gradient(#222 0% 25%, #333 0% 50%) 50% / 10px 10px;
+        border-radius: 3px;
+        border: 1px solid rgba(0, 0, 0, 0.3);
+    }
+
+    .thumb-img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        display: block;
+    }
+
+    .card-label {
+        font-size: 10px;
+        text-align: center;
+        word-break: break-all;
+        line-height: 1.2;
+    }
+
+    .row {
+        display: flex;
+        gap: 8px;
+    }
+
+    .col {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .flex-1 {
+        flex: 1;
+    }
+
+    .flex-2 {
+        flex: 2;
+    }
+
+    .hint-text {
+        font-size: 9px;
+        color: var(--text-muted);
+        font-style: italic;
+        margin-top: 2px;
+        text-align: right;
+    }
+
+    /* --- ESTILOS VISTA CONFIRMACION --- */
+    .confirm-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 20px;
+    }
+</style>
+
+<body>
+    <div id="view-select" class="modal-layout">
+        <div class="header-title">Select Animation</div>
+
+        <div class="col">
+            <label class="section-label">Animation Key Name</label>
+            <input type="text" id="m_anim_key" class="custom-input" placeholder="e.g. idle" autocomplete="off">
+        </div>
+
+        <div class="col">
+            <label class="section-label">Available Animations</label>
+            <div id="m_xml_list" class="anim-grid">
+                <div style="grid-column: 1/-1; text-align: center; opacity: 0.5; padding: 20px;">Loading...</div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col flex-2">
+                <label class="section-label">XML Prefix</label>
+                <input type="text" id="m_anim_prefix" class="custom-input" readonly
+                    style="background: rgba(0,0,0,0.2); color: #aaa;">
+            </div>
+            <div class="col flex-1">
+                <label class="section-label">Indices</label>
+                <input type="text" id="m_anim_indices" class="custom-input" placeholder="00, 01..." autocomplete="off">
+                <span class="hint-text">Empty = All Frames</span>
+            </div>
+        </div>
+
+        <div class="modal-actions">
+            <button id="m_btn_cancel" class="btn-modal btn-cancel">Cancel</button>
+            <button id="m_btn_accept" class="btn-modal btn-accept">Accept</button>
+        </div>
+    </div>
+
+    <div id="view-delete" class="modal-layout" style="display: none;">
+        <div class="header-title" style="color: #d32f2f;">Delete Animation</div>
+
+        <div class="confirm-content">
+            <span class="material-icons" style="font-size: 48px; color: #d32f2f; margin-bottom: 15px;">warning</span>
+            <p style="margin: 0; font-size: 14px;">Are you sure you want to delete this animation?</p>
+            <p id="del_anim_name" style="margin: 15px 0; font-weight: bold; font-size: 18px; color: var(--text-main);">
+                AnimName</p>
+            <p style="margin: 0; font-size: 12px; color: var(--text-muted);">This action cannot be undone.</p>
+        </div>
+
+        <div class="modal-actions">
+            <button id="del_btn_cancel" class="btn-modal btn-cancel">Cancel</button>
+            <button id="del_btn_confirm" class="btn-modal btn-danger">Delete</button>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            // Variables globales del scope
+            let _animData = [];
+            let _existingKeys = [];
+            let _onAcceptCallback = null;
+            let _onCancelCallback = null;
+            let _onConfirmDelete = null;
+            let _selectedItem = null;
+
+            // Referencias DOM
+            const dom = {
+                // Vistas
+                viewSelect: document.getElementById('view-select'),
+                viewDelete: document.getElementById('view-delete'),
+
+                // Select Inputs
+                key: document.getElementById('m_anim_key'),
+                list: document.getElementById('m_xml_list'),
+                prefix: document.getElementById('m_anim_prefix'),
+                indices: document.getElementById('m_anim_indices'),
+                btnAccept: document.getElementById('m_btn_accept'),
+                btnCancel: document.getElementById('m_btn_cancel'),
+
+                // Delete Inputs
+                delName: document.getElementById('del_anim_name'),
+                delBtnCancel: document.getElementById('del_btn_cancel'),
+                delBtnConfirm: document.getElementById('del_btn_confirm')
+            };
+
+            window.initStageAnimModal = function (config) {
+                const mode = config.mode || 'select';
+
+                if (mode === 'delete') {
+                    // --- MODO ELIMINACIÓN ---
+                    dom.viewSelect.style.display = 'none';
+                    dom.viewDelete.style.display = 'flex';
+
+                    dom.delName.textContent = config.animKey || "Unknown";
+
+                    _onConfirmDelete = config.onConfirm;
+                    _onCancelCallback = config.onCancel;
+
+                    dom.delBtnCancel.onclick = () => { if (_onCancelCallback) _onCancelCallback(); };
+                    dom.delBtnConfirm.onclick = () => { if (_onConfirmDelete) _onConfirmDelete(); };
+
+                } else {
+                    // --- MODO SELECCIÓN (Original) ---
+                    dom.viewSelect.style.display = 'flex';
+                    dom.viewDelete.style.display = 'none';
+
+                    _animData = config.animData || [];
+                    _existingKeys = config.existingKeys || [];
+                    _onAcceptCallback = config.onAccept;
+                    _onCancelCallback = config.onCancel;
+
+                    dom.key.value = "";
+                    dom.prefix.value = "";
+                    dom.indices.value = "";
+                    _selectedItem = null;
+
+                    renderGrid();
+                    validate();
+
+                    dom.key.oninput = validate;
+                    dom.btnCancel.onclick = () => { if (_onCancelCallback) _onCancelCallback(); };
+                    dom.btnAccept.onclick = () => {
+                        if (!dom.btnAccept.classList.contains('ready')) return;
+                        handleAccept();
+                    };
+                }
+            };
+
+            // --- Lógica del Selector ---
+            function renderGrid() {
+                dom.list.innerHTML = '';
+                if (_animData.length === 0) {
+                    dom.list.innerHTML = '<div style="padding:10px; opacity:0.5; text-align:center; grid-column:1/-1;">No animations found in texture.</div>';
+                    return;
+                }
+                _animData.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'xml-card';
+                    let thumbHtml = item.thumb
+                        ? `<div class="thumb-container"><img src="${item.thumb}" class="thumb-img"></div>`
+                        : `<div class="thumb-container" style="opacity:0.3"><span class="material-icons">image_not_supported</span></div>`;
+
+                    card.innerHTML = `${thumbHtml}<div class="card-label">${item.displayName}</div>`;
+                    card.onclick = () => selectCard(card, item);
+                    dom.list.appendChild(card);
+                });
+            }
+
+            function selectCard(cardElement, item) {
+                document.querySelectorAll('.xml-card').forEach(c => c.classList.remove('selected'));
+                cardElement.classList.add('selected');
+                _selectedItem = item;
+                dom.prefix.value = item.rawPrefix;
+                if (!dom.key.value.trim()) {
+                    dom.key.value = item.rawPrefix.toLowerCase().replace(/\s+/g, '_');
+                }
+                validate();
+            }
+
+            function validate() {
+                const k = dom.key.value.trim();
+                const p = dom.prefix.value.trim();
+                let valid = true;
+                if (!k || !p) valid = false;
+                if (_existingKeys.includes(k)) valid = false;
+
+                if (valid) dom.btnAccept.classList.add('ready');
+                else dom.btnAccept.classList.remove('ready');
+            }
+
+            function handleAccept() {
+                const k = dom.key.value.trim();
+                const p = dom.prefix.value.trim();
+                let rawIndices = dom.indices.value.trim();
+                let finalIndices = [];
+
+                if (rawIndices === "") {
+                    if (_selectedItem && _selectedItem.allIndices) finalIndices = _selectedItem.allIndices;
+                } else {
+                    finalIndices = rawIndices.split(',').map(s => s.trim());
+                }
+
+                if (_onAcceptCallback) {
+                    _onAcceptCallback({ key: k, prefix: p, indices: finalIndices });
+                }
+            }
+        })();
+    </script>
+</body>
+
+</html>

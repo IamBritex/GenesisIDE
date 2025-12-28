@@ -64,10 +64,10 @@
         top: 100%;
         left: 0;
         min-width: 220px;
-        background-color: #1f1f1f;
+        background-color: var(--bg-header);
         border: 1px solid var(--border-subtle);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-        border-radius: 4px;
+        box-shadow: var(--shadow-window);
+        border-radius: var(--radius-sm);
         padding: 4px 0;
         z-index: 99999;
         flex-direction: column;
@@ -83,58 +83,49 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        color: #cccccc;
+        color: var(--text-main);
         font-size: 13px;
         position: relative;
-        /* Necesario para posicionar submenús */
     }
 
     .dropdown-item:hover {
-        background-color: #007acc;
-        color: white;
+        background-color: var(--accent-color);
+        color: var(--accent-inverse);
     }
 
     .dropdown-item span.shortcut {
-        color: #777;
+        color: var(--text-muted);
         font-size: 10px;
         margin-left: 15px;
     }
 
     .dropdown-item:hover span.shortcut {
-        color: rgba(255, 255, 255, 0.8);
+        color: var(--accent-inverse);
+        opacity: 0.8;
     }
 
     .dropdown-separator {
         height: 1px;
-        background-color: #333;
+        background-color: var(--border-subtle);
         margin: 4px 0;
     }
 
     /* --- SUBMENÚS (ANIDADOS) --- */
-
-    /* Indicador de flecha derecha para ítems con submenú */
     .dropdown-item.has-submenu::after {
         content: '›';
-        /* O usar material icon 'chevron_right' */
         font-family: monospace;
         font-weight: bold;
         font-size: 14px;
         margin-left: 10px;
     }
 
-    /* El submenú en sí */
     .dropdown-item .dropdown-menu {
         top: -4px;
-        /* Alinear con el borde superior del item padre */
         left: 100%;
-        /* Mover a la derecha del item padre */
         margin-left: -1px;
-        /* Pequeño solape para estética */
         display: none;
-        /* Oculto por defecto */
     }
 
-    /* Mostrar submenú al hacer hover en el item padre */
     .dropdown-item.has-submenu:hover>.dropdown-menu {
         display: flex;
     }
@@ -269,11 +260,9 @@
 <script>
     (function () {
         const menuItems = document.querySelectorAll('.menu-bar > .menu-group > .menu-item');
-        const allDropdowns = document.querySelectorAll('.menu-bar .dropdown-menu'); // Solo los top-level
         const menuGroups = document.querySelectorAll('.menu-group');
 
         const closeAllDropdowns = () => {
-            // Cerramos solo los dropdowns principales, los submenús se cierran por CSS al quitar hover
             document.querySelectorAll('.menu-bar > .menu-group > .dropdown-menu').forEach(dd => dd.classList.remove('show'));
             menuGroups.forEach(grp => grp.classList.remove('active'));
         };
@@ -285,7 +274,6 @@
                 const targetDropdown = document.getElementById(targetId);
                 const parentGroup = item.closest('.menu-group');
 
-                // Si ya está abierto, cerrar
                 if (targetDropdown.classList.contains('show')) {
                     closeAllDropdowns();
                 } else {
@@ -297,7 +285,6 @@
 
             item.addEventListener('mouseenter', () => {
                 let isAnyOpen = false;
-                // Verificamos si algún menú PRINCIPAL está abierto
                 document.querySelectorAll('.menu-bar > .menu-group > .dropdown-menu').forEach(dd => {
                     if (dd.classList.contains('show')) isAnyOpen = true;
                 });

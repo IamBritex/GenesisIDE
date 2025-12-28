@@ -1,0 +1,85 @@
+<div class="group-section">
+    <div class="group-header" onclick="window.toggleGroup(this)">
+        <i class="material-icons">transform</i> Transform
+    </div>
+    <div class="group-content">
+        <div class="prop-row" data-keywords="x position">
+            <label>X</label>
+            <input type="number" id="propX" class="prop-input">
+        </div>
+        <div class="prop-row" data-keywords="y position">
+            <label>Y</label>
+            <input type="number" id="propY" class="prop-input">
+        </div>
+
+        <div class="prop-row full-width" data-keywords="scale size width height">
+            <label>Scale</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <div style="flex: 1; display: flex; align-items: center; gap: 4px;">
+                    <span style="font-size: 9px; color: var(--text-muted);">X</span>
+                    <input type="number" id="propScaleX" class="prop-input" step="0.05">
+                </div>
+
+                <div id="btnLinkScale"
+                    style="cursor: pointer; color: var(--text-muted); display: flex; align-items: center;"
+                    title="Link Scale">
+                    <i class="material-icons" style="font-size: 16px;">link</i>
+                </div>
+
+                <div style="flex: 1; display: flex; align-items: center; gap: 4px;">
+                    <span style="font-size: 9px; color: var(--text-muted);">Y</span>
+                    <input type="number" id="propScaleY" class="prop-input" step="0.05">
+                </div>
+            </div>
+        </div>
+
+        <div class="prop-row full-width" data-keywords="angle rotation">
+            <label>Angle</label>
+            <input type="number" id="propAngle" class="prop-input">
+        </div>
+    </div>
+</div>
+
+<div class="group-section">
+    <div class="group-header" onclick="window.toggleGroup(this)">
+        <i class="material-icons">visibility</i> Visuals
+    </div>
+    <div class="group-content">
+        <div class="prop-row full-width" data-keywords="alpha opacity">
+            <label>Alpha</label>
+            <input type="range" id="propAlpha" class="prop-range" min="0" max="1" step="0.01">
+        </div>
+
+        <div class="prop-row" data-keywords="layer depth z-index">
+            <label>Layer</label>
+            <input type="number" id="propLayer" class="prop-input" step="1">
+        </div>
+
+        <div class="prop-row full-width" data-keywords="scroll parallax factor">
+            <label>Scroll Factor (Parallax)</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <div style="flex: 1; display: flex; align-items: center; gap: 4px;">
+                    <span style="font-size: 9px; color: var(--text-muted);">X</span>
+                    <input type="number" id="propScrollX" class="prop-input" step="0.1">
+                </div>
+
+                <div id="btnLinkScroll"
+                    style="cursor: pointer; color: var(--text-muted); display: flex; align-items: center;"
+                    title="Link Scroll">
+                    <i class="material-icons" style="font-size: 16px;">link</i>
+                </div>
+
+                <div style="flex: 1; display: flex; align-items: center; gap: 4px;">
+                    <span style="font-size: 9px; color: var(--text-muted);">Y</span>
+                    <input type="number" id="propScrollY" class="prop-input" step="0.1">
+                </div>
+            </div>
+        </div>
+        <div class="prop-row full-width" data-keywords="flip mirror orientation">
+            <div style="display:flex; gap:15px; margin-top:5px;">
+                <label class="checkbox-label"><input type="checkbox" id="propFlipX"> Flip X</label>
+                <label class="checkbox-label"><input type="checkbox" id="propFlipY"> Flip Y</label>
+            </div>
+        </div>
+    </div>
+</div>

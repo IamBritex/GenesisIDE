@@ -64,7 +64,13 @@ export class ModularWindow {
         this.interaction.domContainer = this.domElement.node;
 
         ModularWindow.openPopups.push(this);
-        this._playSound('editorOpen');
+
+        // [MODIFICADO] Lógica de sonido: Evitar sonar en ventanas por defecto
+        const defaultWindows = ['tool-bar', 'bottom-bar', 'explorer', 'properties', 'tab-bar'];
+        // Si tiene ID y está en la lista, no suena. Si no tiene ID o no está, suena 'openWindow'.
+        if (!this.config.id || !defaultWindows.includes(this.config.id)) {
+            this._playSound('openWindow');
+        }
 
         this.focus();
         this.domElement.node.style.visibility = 'visible';
@@ -138,6 +144,9 @@ export class ModularWindow {
     onDragEnd = null;
 
     close() {
+        // [MODIFICADO] Sonido al cerrar
+        this._playSound('exitWindow');
+
         this._saveCurrentPosition();
         this.windowNode.classList.add('closing');
         if (this.interaction) this.interaction.destroy();

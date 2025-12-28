@@ -31,19 +31,19 @@
         cursor: pointer;
         color: var(--text-muted);
         transition: all 0.2s ease;
-        border-radius: 4px;
+        border-radius: var(--radius-sm);
         position: relative;
     }
 
     .dock-item:hover {
         color: var(--text-main);
-        background-color: rgba(255, 255, 255, 0.05);
+        background-color: var(--bg-hover);
     }
 
     /* Estilo Activo */
     .dock-item.active {
         color: var(--text-main);
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: var(--bg-hover);
     }
 
     .dock-item.active::after {
@@ -62,7 +62,7 @@
     }
 
     .dock-label {
-        font-family: 'Segoe UI', sans-serif;
+        font-family: var(--font-main);
         font-size: 13px;
         font-weight: 600;
         text-transform: uppercase;
@@ -90,11 +90,9 @@
 
         items.forEach(item => {
             item.addEventListener('click', () => {
-                // 1. Actualización Visual
                 items.forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
 
-                // 2. Emisión de Evento Global
                 const modeName = item.dataset.mode;
                 window.dispatchEvent(new CustomEvent('editor-mode-change', {
                     detail: { mode: modeName }

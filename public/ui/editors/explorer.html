@@ -13,9 +13,9 @@
         display: flex;
         flex-direction: column;
         height: 100%;
-        background-color: #181818;
-        color: #CCCCCC;
-        font-family: 'Segoe UI', Tahoma, sans-serif;
+        background-color: var(--bg-window);
+        color: var(--text-main);
+        font-family: var(--font-main);
         font-size: 13px;
         overflow: hidden;
         user-select: none;
@@ -28,7 +28,7 @@
         justify-content: space-between;
         padding: 0 15px;
         height: 35px;
-        background-color: #252526;
+        background-color: var(--bg-header);
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
@@ -37,6 +37,7 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        border-bottom: 1px solid var(--border-subtle);
     }
 
     .toolbar-actions {
@@ -48,6 +49,7 @@
         cursor: pointer;
         margin-left: 6px;
         opacity: 0.7;
+        color: var(--text-main);
     }
 
     .toolbar-actions .material-icons:hover {
@@ -71,18 +73,14 @@
     }
 
     .explorer-content::-webkit-scrollbar-thumb {
-        background-color: rgba(255, 255, 255, 0.05);
+        background-color: var(--bg-hover);
         border: 2px solid transparent;
         background-clip: content-box;
         border-radius: 10px;
     }
 
     .explorer-content:hover::-webkit-scrollbar-thumb {
-        background-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .explorer-content::-webkit-scrollbar-thumb:hover {
-        background-color: rgba(255, 255, 255, 0.4);
+        background-color: var(--border-subtle);
     }
 
     /* --- PLACEHOLDER --- */
@@ -98,24 +96,24 @@
     .drop-zone {
         width: 100%;
         height: 100%;
-        border: 2px dashed #444;
-        border-radius: 12px;
+        border: 2px dashed var(--border-subtle);
+        border-radius: var(--radius-main);
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         text-align: center;
-        color: #777;
+        color: var(--text-muted);
         transition: all 0.2s ease-out;
         cursor: pointer;
-        background-color: rgba(0, 0, 0, 0.1);
+        background-color: var(--bg-input);
     }
 
     .drop-zone:hover,
     .drop-zone.drag-over {
-        border-color: #007acc;
-        background-color: rgba(0, 122, 204, 0.1);
-        color: #fff;
+        border-color: var(--accent-color);
+        background-color: var(--bg-hover);
+        color: var(--text-main);
         transform: scale(0.99);
     }
 
@@ -130,6 +128,43 @@
         line-height: 1.4;
         font-weight: 500;
         pointer-events: none;
+        font-family: var(--font-main);
+    }
+
+    /* --- NUEVO BOTÓN --- */
+    .or-divider {
+        margin: 12px 0;
+        font-size: 10px;
+        color: var(--text-muted);
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .create-mod-btn {
+        background-color: transparent;
+        border: 1px solid var(--accent-color);
+        color: var(--accent-color);
+        padding: 8px 16px;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        font-family: var(--font-main);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        transition: all 0.2s ease;
+        pointer-events: auto;
+        z-index: 10;
+    }
+
+    .create-mod-btn:hover {
+        background-color: var(--accent-color);
+        color: var(--accent-inverse);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        transform: translateY(-1px);
+    }
+
+    .create-mod-btn:active {
+        transform: translateY(0);
     }
 
     /* --- ARBOL Y ITEMS --- */
@@ -137,7 +172,6 @@
         display: none;
         padding-top: 5px;
         padding-bottom: 20px;
-        /* Espacio extra al final */
         width: 100%;
     }
 
@@ -160,32 +194,30 @@
         padding-right: 10px;
         white-space: nowrap;
         border: 1px solid transparent;
-        color: #CCCCCC;
+        color: var(--text-main);
         position: relative;
     }
 
     /* Feedback visual Drag & Drop */
     .tree-item.drag-target-folder {
-        background-color: rgba(0, 122, 204, 0.4) !important;
-        outline: 1px dashed #007acc;
+        background-color: var(--bg-hover) !important;
+        outline: 1px dashed var(--accent-color);
     }
 
-    .tree-item.folder:hover {
-        background-color: #2A2D2E;
-    }
-
+    .tree-item.folder:hover,
     .tree-item.file:hover {
-        background-color: #2A2D2E;
+        background-color: var(--bg-hover);
     }
 
     .tree-item.file.selected {
-        background-color: #37373D;
-        color: #FFFFFF;
+        background-color: var(--bg-hover);
+        color: var(--accent-color);
+        font-weight: bold;
     }
 
     .tree-arrow {
         font-size: 16px;
-        color: #C5C5C5;
+        color: var(--text-muted);
         width: 22px;
         min-width: 22px;
         height: 22px;
@@ -214,7 +246,7 @@
     .tree-icon {
         font-size: 16px;
         margin-right: 6px;
-        color: #C5C5C5;
+        color: var(--text-muted);
         flex-shrink: 0;
     }
 
@@ -244,7 +276,7 @@
     }
 
     .icon-default {
-        color: #cccccc;
+        color: var(--text-muted);
     }
 
     .tree-label {
@@ -256,9 +288,9 @@
 
     /* Input para renombrar */
     .rename-input {
-        background: #3c3c3c;
-        border: 1px solid #007acc;
-        color: white;
+        background: var(--bg-input);
+        border: 1px solid var(--accent-color);
+        color: var(--text-main);
         font-family: inherit;
         font-size: inherit;
         padding: 0 4px;
@@ -266,7 +298,7 @@
         width: 100%;
         box-sizing: border-box;
         margin-left: -5px;
-        /* Ajuste visual */
+        border-radius: var(--radius-sm);
     }
 
     .tree-children {
@@ -282,13 +314,13 @@
     #contextMenu {
         display: none;
         position: fixed;
-        background: #252526;
-        border: 1px solid #454545;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        background: var(--bg-header);
+        border: 1px solid var(--border-subtle);
+        box-shadow: var(--shadow-window);
         z-index: 10000;
         min-width: 150px;
         padding: 4px 0;
-        border-radius: 4px;
+        border-radius: var(--radius-sm);
     }
 
     .ctx-item {
@@ -298,17 +330,17 @@
         align-items: center;
         gap: 8px;
         font-size: 12px;
-        color: #cccccc;
+        color: var(--text-main);
     }
 
     .ctx-item:hover {
-        background-color: #007acc;
-        color: white;
+        background-color: var(--accent-color);
+        color: var(--accent-inverse);
     }
 
     .ctx-separator {
         height: 1px;
-        background-color: #454545;
+        background-color: var(--border-subtle);
         margin: 4px 0;
     }
 </style>
@@ -326,8 +358,12 @@
             <div class="drop-zone" id="fileDropArea">
                 <span class="material-icons drop-icon">folder_open</span>
                 <div class="drop-text">
-                    Click to browse or drag your files here
+                    Click to browse or drag your mod here
                 </div>
+
+                <div class="or-divider">- OR -</div>
+                <button id="btnCreateMod" class="create-mod-btn">Create New Mod</button>
+
                 <input type="file" id="fileInput" webkitdirectory directory multiple style="display: none;">
             </div>
         </div>
@@ -352,21 +388,57 @@
         const explorerTitle = document.getElementById('explorerTitle');
         const toolbarActions = document.getElementById('toolbarActions');
         const contextMenu = document.getElementById('contextMenu');
+        const btnCreateMod = document.getElementById('btnCreateMod');
 
-        // Estado Global de Archivos: { "path/to/file": FileObject, ... }
         let globalFilesMap = {};
-
-        // Variables para drag & drop interno
         let draggedItemPath = null;
+        let contextTarget = null;
 
-        // Variables para menú contextual
-        let contextTarget = null; // Ruta del item bajo el click derecho
+        const MOD_TEMPLATE_JSON = {
+            "name": "Your mod name",
+            "description": "Your mod description",
+            "version": "1.0.0",
+            "restart": false,
+            "color": "#FF5500",
+            "author": "Your name",
+            "homepage": "https://yourmodhomepage.example",
+            "dependencies": [],
+            "api_version": "1.0"
+        };
 
-        // --- MANEJO DE EVENTOS INICIALES ---
+        const DEFAULT_FOLDERS = [
+            'songs', 'data', 'data/characters', 'data/stages', 'images', 'images/characters', 'music', 'sounds'
+        ];
+
+        // --- EVENTOS DE UI ---
         dropZone.addEventListener('click', () => fileInput.click());
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
         dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); });
 
+        if (btnCreateMod) {
+            btnCreateMod.addEventListener('click', (e) => {
+                e.stopPropagation();
+                createModStructure();
+            });
+        }
+
+        // --- CREACIÓN DE MOD ---
+        function createModStructure() {
+            globalFilesMap = {};
+            const jsonContent = JSON.stringify(MOD_TEMPLATE_JSON, null, 4);
+            const jsonFile = new File([jsonContent], "mod.json", { type: "application/json" });
+            globalFilesMap["mod.json"] = jsonFile;
+
+            DEFAULT_FOLDERS.forEach(folderPath => {
+                const keepFile = new File([""], ".keep", { type: "text/plain" });
+                globalFilesMap[`${folderPath}/.keep`] = keepFile;
+            });
+
+            console.log("Mod structure created in memory.");
+            refreshTree();
+        }
+
+        // --- MANEJO DE ARCHIVOS (DROP & INPUT) ---
         dropZone.addEventListener('drop', async (e) => {
             e.preventDefault();
             dropZone.classList.remove('drag-over');
@@ -374,7 +446,7 @@
             if (!items) return;
 
             const entry = items[0].webkitGetAsEntry();
-            globalFilesMap = {}; // Resetear mapa nuevo
+            globalFilesMap = {};
 
             if (entry && entry.isFile && entry.name.endsWith('.zip')) {
                 const file = items[0].getAsFile();
@@ -392,18 +464,11 @@
             refreshTree();
         });
 
-        // --- SISTEMA DE RENOMBRADO Y MENÚ ---
-
-        // Ocultar menú al hacer click fuera
+        // --- CONTEXT MENU ---
         window.addEventListener('click', () => contextMenu.style.display = 'none');
-
-        document.getElementById('ctxRename').addEventListener('click', () => {
-            if (contextTarget) startRename(contextTarget);
-        });
-
+        document.getElementById('ctxRename').addEventListener('click', () => { if (contextTarget) startRename(contextTarget); });
         document.getElementById('ctxDelete').addEventListener('click', () => {
             if (contextTarget) {
-                // Borrar recursivamente si es carpeta, o simple si es archivo
                 const keysToDelete = Object.keys(globalFilesMap).filter(k => k === contextTarget || k.startsWith(contextTarget + '/'));
                 keysToDelete.forEach(k => delete globalFilesMap[k]);
                 refreshTree();
@@ -411,164 +476,87 @@
         });
 
         function startRename(path) {
-            // Buscar el elemento DOM correspondiente
             const treeItem = document.querySelector(`.tree-item[data-path="${path}"]`);
             if (!treeItem) return;
-
             const label = treeItem.querySelector('.tree-label');
             const oldName = label.textContent;
-
-            // Crear input
             const input = document.createElement('input');
-            input.type = 'text';
-            input.value = oldName;
-            input.className = 'rename-input';
+            input.type = 'text'; input.value = oldName; input.className = 'rename-input';
+            label.style.display = 'none'; treeItem.appendChild(input); input.focus(); input.select();
 
-            // Reemplazar label con input
-            label.style.display = 'none';
-            treeItem.appendChild(input);
-            input.focus();
-            input.select(); // Seleccionar texto para reemplazar rápido
-
-            // Manejar confirmación
             const commit = () => {
                 const newName = input.value.trim();
-                if (newName && newName !== oldName) {
-                    performRename(path, newName);
-                } else {
-                    cancel();
-                }
+                if (newName && newName !== oldName) performRename(path, newName);
+                else cancel();
             };
-
-            const cancel = () => {
-                input.remove();
-                label.style.display = 'block';
-            };
-
+            const cancel = () => { input.remove(); label.style.display = 'block'; };
             input.addEventListener('blur', commit);
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    input.blur(); // Dispara commit
-                } else if (e.key === 'Escape') {
-                    input.removeEventListener('blur', commit); // Evitar doble llamada
-                    cancel();
-                }
-            });
-
-            // Evitar que el drag del padre interfiera con la selección de texto
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); else if (e.key === 'Escape') { input.removeEventListener('blur', commit); cancel(); } });
             input.addEventListener('mousedown', (e) => e.stopPropagation());
         }
 
         function performRename(oldPath, newName) {
-            // Calcular nueva ruta base
-            const parts = oldPath.split('/');
-            parts.pop(); // Quitar nombre viejo
+            const parts = oldPath.split('/'); parts.pop();
             const basePath = parts.join('/');
             const newPathStart = basePath ? `${basePath}/${newName}` : newName;
-
-            // Crear nuevo mapa actualizado
             const newMap = {};
-
             Object.keys(globalFilesMap).forEach(key => {
                 if (key === oldPath || key.startsWith(oldPath + '/')) {
-                    // Es el item o un hijo: Cambiar prefijo
                     const suffix = key.substring(oldPath.length);
                     const newKey = newPathStart + suffix;
                     newMap[newKey] = globalFilesMap[key];
-                } else {
-                    // Item no afectado
-                    newMap[key] = globalFilesMap[key];
-                }
+                } else { newMap[key] = globalFilesMap[key]; }
             });
-
-            globalFilesMap = newMap;
-            refreshTree();
+            globalFilesMap = newMap; refreshTree();
         }
 
-
-        // --- SISTEMA DE DRAG & DROP INTERNO ---
-
+        // --- DRAG INTERNO ---
         function handleDragStart(e, path) {
-            e.stopPropagation();
-            draggedItemPath = path;
-            e.dataTransfer.effectAllowed = 'move';
-            // Setear dato dummy para compatibilidad
-            e.dataTransfer.setData('text/plain', path);
+            e.stopPropagation(); draggedItemPath = path;
+            e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', path);
         }
 
         function handleDragOver(e, isFolder, targetPath) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            // Solo permitir soltar sobre carpetas y no sobre uno mismo o sus hijos
+            e.preventDefault(); e.stopPropagation();
             if (isFolder && draggedItemPath !== targetPath && !targetPath.startsWith(draggedItemPath + '/')) {
-                const item = e.currentTarget;
-                item.classList.add('drag-target-folder');
-                e.dataTransfer.dropEffect = 'move';
-            } else {
-                e.dataTransfer.dropEffect = 'none';
-            }
+                e.currentTarget.classList.add('drag-target-folder'); e.dataTransfer.dropEffect = 'move';
+            } else { e.dataTransfer.dropEffect = 'none'; }
         }
 
-        function handleDragLeave(e) {
-            e.currentTarget.classList.remove('drag-target-folder');
-        }
-
+        function handleDragLeave(e) { e.currentTarget.classList.remove('drag-target-folder'); }
         function handleDrop(e, targetPath) {
-            e.preventDefault();
-            e.stopPropagation();
+            e.preventDefault(); e.stopPropagation();
             e.currentTarget.classList.remove('drag-target-folder');
-
             if (!draggedItemPath || draggedItemPath === targetPath) return;
-
-            // Realizar movimiento
-            performMove(draggedItemPath, targetPath);
-            draggedItemPath = null;
+            performMove(draggedItemPath, targetPath); draggedItemPath = null;
         }
 
         function performMove(sourcePath, targetFolder) {
-            // Extraer nombre del archivo/carpeta movido
             const sourceName = sourcePath.split('/').pop();
             const newPrefix = targetFolder ? `${targetFolder}/${sourceName}` : sourceName;
-
             const newMap = {};
-
             Object.keys(globalFilesMap).forEach(key => {
                 if (key === sourcePath || key.startsWith(sourcePath + '/')) {
-                    // Reemplazar la parte 'sourcePath' con 'newPrefix'
-                    // Ejemplo: sourcePath="A", target="B".  key="A/img.png" -> "B/A/img.png"
-                    // PERO espera, si muevo "File" a "Folder", la nueva ruta es "Folder/File"
-
                     const relativeSuffix = key.substring(sourcePath.length);
                     const newKey = newPrefix + relativeSuffix;
                     newMap[newKey] = globalFilesMap[key];
-                } else {
-                    newMap[key] = globalFilesMap[key];
-                }
+                } else { newMap[key] = globalFilesMap[key]; }
             });
-
-            globalFilesMap = newMap;
-            refreshTree();
+            globalFilesMap = newMap; refreshTree();
         }
 
-
-        // --- RENDERIZADO ---
-
+        // --- RENDERIZADO DEL ÁRBOL ---
         function refreshTree() {
             if (Object.keys(globalFilesMap).length > 0) {
                 placeholderContainer.style.display = 'none';
                 treeRoot.style.display = 'block';
                 toolbarActions.style.display = 'block';
                 treeRoot.innerHTML = '';
-
                 const treeStructure = buildTreeFromPaths(Object.keys(globalFilesMap));
                 const rootKeys = Object.keys(treeStructure);
-
-                // Root Flattening
-                if (rootKeys.length === 1 && !treeStructure[rootKeys[0]].isFile) {
+                if (rootKeys.length === 1 && !treeStructure[rootKeys[0]].isFile && rootKeys[0] !== 'mod.json') {
                     const rootNode = treeStructure[rootKeys[0]];
-                    explorerTitle.textContent = rootNode.name;
-                    // Pasamos el prefijo base para que los paths internos sean correctos
+                    explorerTitle.textContent = rootNode.name.toUpperCase();
                     renderTree(rootNode.children, treeRoot, 0, rootNode.name);
                 } else {
                     explorerTitle.textContent = "EXPLORER";
@@ -579,34 +567,23 @@
 
         function renderTree(nodeList, container, level, currentPathPrefix) {
             const keys = Object.keys(nodeList).sort((a, b) => {
-                const nodeA = nodeList[a];
-                const nodeB = nodeList[b];
+                const nodeA = nodeList[a]; const nodeB = nodeList[b];
                 if (nodeA.isFile === nodeB.isFile) return a.localeCompare(b);
                 return nodeA.isFile ? 1 : -1;
             });
 
             keys.forEach(key => {
                 const node = nodeList[key];
-                const wrapper = document.createElement('div');
-                wrapper.className = 'tree-node';
-
-                // Construir ruta completa para identificación
+                if (node.name === '.keep') return;
+                const wrapper = document.createElement('div'); wrapper.className = 'tree-node';
                 const fullPath = currentPathPrefix ? `${currentPathPrefix}/${node.name}` : node.name;
-
-                const itemRow = document.createElement('div');
-                itemRow.className = 'tree-item';
-                itemRow.dataset.path = fullPath; // IMPORTANTE para lógica
-
-                // Configurar Drag & Drop
-                itemRow.draggable = true;
+                const itemRow = document.createElement('div'); itemRow.className = 'tree-item';
+                itemRow.dataset.path = fullPath; itemRow.draggable = true;
                 itemRow.addEventListener('dragstart', (e) => handleDragStart(e, fullPath));
 
-                // Clases específicas
-                if (node.isFile) {
-                    itemRow.classList.add('file');
-                } else {
+                if (node.isFile) itemRow.classList.add('file');
+                else {
                     itemRow.classList.add('folder');
-                    // Eventos drop solo en carpetas
                     itemRow.addEventListener('dragover', (e) => handleDragOver(e, true, fullPath));
                     itemRow.addEventListener('dragleave', handleDragLeave);
                     itemRow.addEventListener('drop', (e) => handleDrop(e, fullPath));
@@ -614,116 +591,135 @@
 
                 itemRow.style.paddingLeft = `${level * 14 + 10}px`;
 
-                // Evento Context Menu
                 itemRow.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
+                    e.preventDefault(); e.stopPropagation();
                     contextTarget = fullPath;
-                    // Posicionar menú
-                    contextMenu.style.left = `${e.clientX}px`;
-                    contextMenu.style.top = `${e.clientY}px`;
+                    contextMenu.style.left = `${e.clientX}px`; contextMenu.style.top = `${e.clientY}px`;
                     contextMenu.style.display = 'block';
                 });
 
-                // 1. FLECHAS / SPACER
                 if (!node.isFile) {
-                    const arrow = document.createElement('span');
-                    arrow.className = 'material-icons tree-arrow';
-                    arrow.textContent = 'chevron_right';
+                    const arrow = document.createElement('span'); arrow.className = 'material-icons tree-arrow'; arrow.textContent = 'chevron_right';
                     itemRow.appendChild(arrow);
-                    itemRow.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        wrapper.classList.toggle('open');
-                    });
+                    itemRow.addEventListener('click', (e) => { e.stopPropagation(); wrapper.classList.toggle('open'); });
                 } else {
-                    const spacer = document.createElement('span');
-                    spacer.className = 'tree-spacer';
-                    itemRow.appendChild(spacer);
+                    const spacer = document.createElement('span'); spacer.className = 'tree-spacer'; itemRow.appendChild(spacer);
                     itemRow.addEventListener('click', (e) => {
                         e.stopPropagation();
                         document.querySelectorAll('.tree-item.file').forEach(el => el.classList.remove('selected'));
                         itemRow.classList.add('selected');
                         console.log("Seleccionado:", fullPath);
+
+                        // [NUEVO] Lógica de lectura segura
+                        if (node.isFile && node.name.toLowerCase().endsWith('.json')) {
+                            const entry = globalFilesMap[fullPath];
+
+                            // Usamos el helper readFileContent para soportar todos los formatos
+                            readFileContent(entry)
+                                .then(text => {
+                                    try {
+                                        const content = JSON.parse(text);
+                                        // Verificar si contiene "stage" y es un array
+                                        if (content && content.stage && Array.isArray(content.stage)) {
+                                            console.log("Stage seleccionado para editar:", fullPath);
+                                            window.dispatchEvent(new CustomEvent('editor-stage-selected', {
+                                                detail: { stageData: content, path: fullPath }
+                                            }));
+                                        }
+                                    } catch (err) {
+                                        console.warn("Error parseando JSON:", err);
+                                    }
+                                })
+                                .catch(err => console.error("Error leyendo archivo:", err));
+                        }
                     });
                 }
 
-                // 2. ICONO
-                const icon = document.createElement('span');
-                icon.className = 'material-icons tree-icon';
+                const icon = document.createElement('span'); icon.className = 'material-icons tree-icon';
                 const iconData = getIconForFile(node.name, node.isFile);
-                icon.textContent = iconData.icon;
-                icon.classList.add(iconData.class);
+                icon.textContent = iconData.icon; icon.classList.add(iconData.class);
                 itemRow.appendChild(icon);
 
-                // 3. ETIQUETA
-                const label = document.createElement('span');
-                label.className = 'tree-label';
-                label.textContent = node.name;
+                const label = document.createElement('span'); label.className = 'tree-label'; label.textContent = node.name;
                 itemRow.appendChild(label);
-
                 wrapper.appendChild(itemRow);
 
-                // 4. HIJOS
                 if (!node.isFile) {
-                    const childrenContainer = document.createElement('div');
-                    childrenContainer.className = 'tree-children';
+                    const childrenContainer = document.createElement('div'); childrenContainer.className = 'tree-children';
                     renderTree(node.children, childrenContainer, level + 1, fullPath);
                     wrapper.appendChild(childrenContainer);
                 }
-
                 container.appendChild(wrapper);
             });
         }
 
-        // --- UTILIDADES ---
+        // --- HELPER UNIVERSAL DE LECTURA ---
+        function readFileContent(entry) {
+            return new Promise((resolve, reject) => {
+                // Caso 1: File Object (Input o Create Mod)
+                if (entry instanceof File) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = (e) => reject(e);
+                    reader.readAsText(entry);
+                }
+                // Caso 2: JSZip Object (Zip Drop)
+                else if (entry.async) {
+                    entry.async("string").then(resolve).catch(reject);
+                }
+                // Caso 3: FileSystemFileEntry (Folder Drop)
+                else if (entry.isFile && entry.file) {
+                    entry.file((file) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.onerror = (e) => reject(e);
+                        reader.readAsText(file);
+                    }, reject);
+                }
+                else {
+                    reject("Tipo de archivo desconocido");
+                }
+            });
+        }
+
+        // --- PROCESAMIENTO DE ARCHIVOS ---
         async function processZip(file, map) {
             if (!window.JSZip) return console.error("JSZip missing");
             const zip = await JSZip.loadAsync(file);
             zip.forEach((relativePath, zipEntry) => {
-                if (!zipEntry.dir) map[relativePath] = "zip_content";
+                if (!zipEntry.dir) map[relativePath] = zipEntry; // GUARDAMOS EL OBJETO ZIP, NO STRING
             });
         }
 
         async function scanFiles(entry, map) {
             if (entry.isFile) {
-                let cleanPath = entry.fullPath;
-                if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
+                let cleanPath = entry.fullPath; if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
                 map[cleanPath] = entry;
             } else if (entry.isDirectory) {
-                const dirReader = entry.createReader();
-                const entries = await readAllEntries(dirReader);
+                const dirReader = entry.createReader(); const entries = await readAllEntries(dirReader);
                 for (const child of entries) await scanFiles(child, map);
             }
         }
-
         function readAllEntries(dirReader) {
             return new Promise((resolve) => {
                 let entries = [];
-                const read = () => {
-                    dirReader.readEntries(result => {
-                        if (!result.length) resolve(entries);
-                        else { entries = entries.concat(result); read(); }
-                    });
-                };
+                const read = () => { dirReader.readEntries(result => { if (!result.length) resolve(entries); else { entries = entries.concat(result); read(); } }); };
                 read();
             });
         }
 
+        // --- UTILS ---
         function buildTreeFromPaths(paths) {
             const root = {};
             paths.forEach(path => {
-                const parts = path.split('/');
-                let current = root;
+                const parts = path.split('/'); let current = root;
                 parts.forEach((part, index) => {
-                    if (!current[part]) {
-                        current[part] = { name: part, children: {}, isFile: index === parts.length - 1 };
-                    }
+                    if (!current[part]) current[part] = { name: part, children: {}, isFile: index === parts.length - 1 };
                     current = current[part].children;
                 });
             });
             return root;
         }
-
         function getIconForFile(filename, isFile) {
             if (!isFile) return { icon: 'folder', class: 'icon-folder' };
             const ext = filename.split('.').pop().toLowerCase();
@@ -737,9 +733,6 @@
                 default: return { icon: 'insert_drive_file', class: 'icon-default' };
             }
         }
-
-        btnCollapse.addEventListener('click', () => {
-            document.querySelectorAll('.tree-node.open').forEach(n => n.classList.remove('open'));
-        });
+        btnCollapse.addEventListener('click', () => { document.querySelectorAll('.tree-node.open').forEach(n => n.classList.remove('open')); });
     })();
 </script>

@@ -1,168 +1,125 @@
-/**
- * source/funkin/ui/editors/components/UI/properties/Properties.js
- * Controlador que sincroniza la ventana de Propiedades HTML con el elemento seleccionado en Phaser.
- */
-export default class Properties {
-    /**
-     * @param {Phaser.Scene} scene - La escena del editor (StageEditor).
-     */
-    constructor(scene) {
-        this.scene = scene;
-        this.targetElement = null;
-        this.isUpdatingUI = false; // Evita bucles infinitos (Input -> Objeto -> Input)
-
-        // Referencias a los elementos del DOM (HTML)
-        // Buscamos por ID, asegúrate de que el HTML tenga estos IDs
-        this.dom = {
-            container: document.getElementById('propList'),
-            emptyState: document.getElementById('propEmpty'),
-            
-            // Inputs
-            visible: document.getElementById('prop-visible'),
-            colorPreview: document.getElementById('prop-color-preview'),
-            colorText: document.getElementById('prop-color-text'),
-            alpha: document.getElementById('prop-alpha'),
-            x: document.getElementById('prop-x'),
-            y: document.getElementById('prop-y')
-        };
-
-        this._initListeners();
-        this._bindInputEvents();
+<style>
+    .properties-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        color: var(--text-main);
+        font-family: var(--font-main);
+        font-size: 11px;
+        overflow-y: auto;
+        padding: 10px;
     }
 
-    /**
-     * Escucha los eventos que emite Elements.js
-     */
-    _initListeners() {
-        // Evento: Alguien seleccionó un objeto (o deseleccionó si es null)
-        this.scene.events.on('element_selected', (element) => {
-            this.setTarget(element);
-        });
-
-        // Evento: El objeto se movió (arrastrando o flechas)
-        this.scene.events.on('element_updated', (element) => {
-            if (this.targetElement === element) {
-                this.updateUIFromElement();
-            }
-        });
+    .group-section {
+        margin-bottom: 12px;
+        border: 1px solid var(--border-subtle);
+        border-radius: 4px;
+        background: var(--bg-input);
+        overflow: hidden;
     }
 
-    /**
-     * Define qué objeto estamos editando actualmente
-     */
-    setTarget(element) {
-        this.targetElement = element;
-
-        if (!element) {
-            this._showEmptyState(true);
-            return;
-        }
-
-        this._showEmptyState(false);
-        this.updateUIFromElement();
+    .group-header {
+        background: var(--bg-header);
+        padding: 6px 8px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        font-size: 10px;
+        text-transform: uppercase;
+        color: var(--text-muted);
     }
 
-    /**
-     * Copia los valores del Objeto Phaser -> Inputs HTML
-     */
-    updateUIFromElement() {
-        if (!this.targetElement || !this.targetElement.active) return;
-
-        this.isUpdatingUI = true;
-
-        // 1. Transformación
-        // Redondeamos para evitar decimales infinitos en la UI
-        if (this.dom.x) this.dom.x.value = Math.round(this.targetElement.x * 10) / 10;
-        if (this.dom.y) this.dom.y.value = Math.round(this.targetElement.y * 10) / 10;
-        
-        // 2. Apariencia
-        if (this.dom.visible) this.dom.visible.checked = this.targetElement.visible;
-        if (this.dom.alpha) this.dom.alpha.value = this.targetElement.alpha.toFixed(2);
-
-        // 3. Color
-        this._updateColorUI();
-
-        this.isUpdatingUI = false;
+    .group-content {
+        padding: 10px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
     }
 
-    /**
-     * Maneja la lógica de color (detecta si es Tint o Fill)
-     */
-    _updateColorUI() {
-        let colorInt = 0xFFFFFF;
-
-        // Sprites/Imágenes usan tintTopLeft, Rectángulos usan fillColor
-        if (this.targetElement.tintTopLeft !== undefined) {
-            colorInt = this.targetElement.tintTopLeft;
-        } else if (this.targetElement.fillColor !== undefined) {
-            colorInt = this.targetElement.fillColor;
-        }
-
-        // Convertir entero a Hex String (#RRGGBB)
-        const hexString = '#' + ('000000' + colorInt.toString(16)).slice(-6).toUpperCase();
-        
-        if (this.dom.colorText) this.dom.colorText.textContent = hexString;
-        if (this.dom.colorPreview) this.dom.colorPreview.style.backgroundColor = hexString;
+    .prop-row {
+        display: flex;
+        flex-direction: column;
     }
 
-    /**
-     * Conecta los Inputs HTML -> Objeto Phaser
-     */
-    _bindInputEvents() {
-        // Helper para aplicar cambios
-        const updateTarget = (callback) => {
-            if (this.targetElement && !this.isUpdatingUI) {
-                callback(this.targetElement);
-                // Opcional: Emitir 'element_updated' si otros sistemas necesitan saberlo
-            }
-        };
-
-        // VISIBLE
-        if (this.dom.visible) {
-            this.dom.visible.addEventListener('change', (e) => {
-                updateTarget((el) => el.setVisible(e.target.checked));
-            });
-        }
-
-        // ALPHA
-        if (this.dom.alpha) {
-            this.dom.alpha.addEventListener('input', (e) => {
-                const val = parseFloat(e.target.value);
-                updateTarget((el) => el.setAlpha(Phaser.Math.Clamp(val || 1, 0, 1)));
-            });
-        }
-
-        // X
-        if (this.dom.x) {
-            this.dom.x.addEventListener('input', (e) => {
-                const val = parseFloat(e.target.value);
-                updateTarget((el) => el.x = (isNaN(val) ? el.x : val));
-            });
-        }
-
-        // Y
-        if (this.dom.y) {
-            this.dom.y.addEventListener('input', (e) => {
-                const val = parseFloat(e.target.value);
-                updateTarget((el) => el.y = (isNaN(val) ? el.y : val));
-            });
-        }
+    .prop-row.full-width {
+        grid-column: span 2;
     }
 
-    _showEmptyState(isEmpty) {
-        if (!this.dom.emptyState || !this.dom.container) return;
-        
-        if (isEmpty) {
-            this.dom.emptyState.style.display = 'flex';
-            this.dom.container.classList.remove('active');
-        } else {
-            this.dom.emptyState.style.display = 'none';
-            this.dom.container.classList.add('active');
-        }
+    .prop-row label {
+        margin-bottom: 4px;
+        color: var(--text-muted);
+        font-size: 10px;
     }
 
-    destroy() {
-        this.scene.events.off('element_selected');
-        this.scene.events.off('element_updated');
+    .prop-input {
+        background: var(--bg-window);
+        border: 1px solid var(--border-subtle);
+        color: var(--text-main);
+        padding: 4px;
+        border-radius: 3px;
     }
-}
+</style>
+
+<div class="properties-container">
+
+    <div class="group-section">
+        <div class="group-header">Image Properties</div>
+        <div class="group-content">
+            <div class="prop-row full-width">
+                <label>File Name</label>
+                <input type="text" id="propType" class="prop-input" readonly style="opacity: 0.7;">
+            </div>
+        </div>
+    </div>
+
+    <div class="group-section">
+        <div class="group-header">Transform</div>
+        <div class="group-content">
+            <div class="prop-row">
+                <label>X</label>
+                <input type="number" id="propX" class="prop-input">
+            </div>
+            <div class="prop-row">
+                <label>Y</label>
+                <input type="number" id="propY" class="prop-input">
+            </div>
+            <div class="prop-row">
+                <label>Scale</label>
+                <input type="number" id="propScale" class="prop-input" step="0.05">
+            </div>
+            <div class="prop-row">
+                <label>Angle</label>
+                <input type="number" id="propAngle" class="prop-input">
+            </div>
+        </div>
+    </div>
+
+    <div class="group-section">
+        <div class="group-header">Visuals</div>
+        <div class="group-content">
+            <div class="prop-row">
+                <label>Alpha</label>
+                <input type="number" id="propAlpha" class="prop-input" step="0.1" min="0" max="1">
+            </div>
+            <div class="prop-row">
+                <label>Layer</label>
+                <input type="number" id="propLayer" class="prop-input" step="1">
+            </div>
+            <div class="prop-row">
+                <label>Scroll X</label>
+                <input type="number" id="propScrollX" class="prop-input" step="0.1">
+            </div>
+            <div class="prop-row">
+                <label>Scroll Y</label>
+                <input type="number" id="propScrollY" class="prop-input" step="0.1">
+            </div>
+            <div class="prop-row full-width">
+                <label>Orientation</label>
+                <div style="display:flex; gap:10px; padding-top:4px;">
+                    <label><input type="checkbox" id="propFlipX"> Flip X</label>
+                    <label><input type="checkbox" id="propFlipY"> Flip Y</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

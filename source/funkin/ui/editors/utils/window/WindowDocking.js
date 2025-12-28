@@ -7,7 +7,7 @@ export default class WindowDocking {
         this.edgeThreshold = 20;
         this.dockPreview = null;
         this.topLimit = 38;
-        this.bottomLimit = 0;
+        this.bottomLimit = 56;
     }
 
     /**

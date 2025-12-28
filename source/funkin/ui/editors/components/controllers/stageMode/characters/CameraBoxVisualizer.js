@@ -1,109 +1,163 @@
+/**
+ * source/funkin/ui/editors/components/controllers/stageMode/characters/CameraBoxVisualizer.js
+ */
 export class CameraBoxVisualizer {
     constructor(scene, controller) {
         this.scene = scene;
         this.controller = controller;
-
-        this.baseResolution = { width: 1280, height: 720 };
-
-        this.bfBox = this._createBox(0x00ff00, 0.2);
-        this.dadBox = this._createBox(0xff0000, 0.2);
-        this.gfBox = this._createBox(0xffff00, 0.2);
-
-        this.group = this.scene.add.group([this.bfBox, this.dadBox, this.gfBox]);
-
-        if (this.scene.cameraManager) {
-            this.scene.cameraManager.assignToGame(this.bfBox);
-            this.scene.cameraManager.assignToGame(this.dadBox);
-            this.scene.cameraManager.assignToGame(this.gfBox);
-        }
-
-        this.group.setDepth(9996);
         this.isVisible = false;
-    }
 
-    _createBox(color, alpha) {
-        const rect = this.scene.add.rectangle(0, 0, this.baseResolution.width, this.baseResolution.height);
-        rect.setOrigin(0.5, 0.5);
-        rect.setFillStyle(color, alpha);
-        rect.setStrokeStyle(2, color, 0.8);
-        rect.setVisible(false);
-        return rect;
+        this.baseRes = { w: 1280, h: 720 };
+
+        this.cameraOffsets = new Map([
+            ['player', { x: 25, y: 90 }],
+            ['enemy', { x: 520, y: 320 }],
+            ['gfVersion', { x: 365, y: 340 }]
+        ]);
+
+        this.cameraZooms = new Map([
+            ['player', 1],
+            ['enemy', 1],
+            ['gfVersion', 1]
+        ]);
+
+        this.boxes = {
+            player: this._createInteractiveBox(0x00ff00, 'player'),
+            enemy: this._createInteractiveBox(0xff0000, 'enemy'),
+            gfVersion: this._createInteractiveBox(0xffff00, 'gfVersion')
+        };
     }
 
     update() {
-        if (!this.isVisible || !this.controller.characters || !this.controller.characters.characterElements) return;
+        if (!this.isVisible || !this.controller.characters?.characterElements) return;
 
         const { bf, dad, gf } = this.controller.characters.characterElements;
-
-        this._updateBox(this.bfBox, bf, 'player');
-        this._updateBox(this.dadBox, dad, 'enemy');
-        this._updateBox(this.gfBox, gf, 'gfVersion');
+        this._syncBoxState(this.boxes.player, bf, 'player');
+        this._syncBoxState(this.boxes.enemy, dad, 'enemy');
+        this._syncBoxState(this.boxes.gfVersion, gf, 'gfVersion');
     }
 
-    _updateBox(box, sprite, charKey) {
-        if (!sprite || !sprite.active || !sprite.visible) {
-            box.setVisible(false);
+    _syncBoxState(container, sprite, key) {
+        if (!sprite?.active || !sprite?.visible) {
+            container.setVisible(false);
             return;
         }
+        container.setVisible(true);
 
-        box.setVisible(true);
-        const offsets = this.controller.getCameraOffsets(charKey);
+        // 1. Posición Base
+        let baseX, baseY;
+        const anchor = this.controller.anchors ? this.controller.anchors[key] : null;
 
-        // --- LÓGICA DE POSICIÓN ESTÁTICA ---
-        // El objetivo es calcular dónde estaría el sprite si estuviera en su pose base (idle),
-        // ignorando los desplazamientos temporales de las animaciones (singLeft, etc).
-
-        // 1. Recuperar dimensiones estables (Idle) calculadas al inicio
-        const stableWidth = sprite.getData('stableWidth') || (sprite.width * sprite.scaleX);
-        const stableHeight = sprite.getData('stableHeight') || (sprite.height * sprite.scaleY);
-
-        // 2. Determinar el Offset de la animación ACTUAL
-        let currentAnimOffset = [0, 0];
-        const offsetsMap = sprite.getData('offsets');
-
-        if (offsetsMap && sprite.anims && sprite.anims.currentAnim) {
-            // El key de la animación suele ser "textureKey_animName". 
-            // Intentamos limpiar el prefijo para buscar en el mapa.
-            const textureKey = sprite.getData('textureKey') || '';
-            const fullAnimKey = sprite.anims.currentAnim.key;
-
-            // Opción A: Buscar por coincidencia exacta si el mapa tiene keys completos (raro)
-            if (offsetsMap.has(fullAnimKey)) {
-                currentAnimOffset = offsetsMap.get(fullAnimKey);
+        if (anchor && anchor.active) {
+            baseX = anchor.x;
+            baseY = anchor.y;
+        } else {
+            let offset = { x: 0, y: 0 };
+            if (typeof this.controller._getAnimOffset === 'function') {
+                offset = this.controller._getAnimOffset(sprite);
             }
-            // Opción B: Quitar prefijo (más común en FNF data logic)
-            else if (textureKey && fullAnimKey.startsWith(textureKey + '_')) {
-                const animName = fullAnimKey.replace(textureKey + '_', '');
-                currentAnimOffset = offsetsMap.get(animName) || [0, 0];
-            }
+            baseX = sprite.x + offset.x;
+            baseY = sprite.y + offset.y;
         }
 
-        // 3. Calcular la Posición "Base" (Lógica)
-        // Sprite.X = BaseX + (Offset * Scale)
-        // Por tanto: BaseX = Sprite.X - (Offset * Scale)
-        const logicalX = sprite.x - (currentAnimOffset[0] * sprite.scaleX);
-        const logicalY = sprite.y - (currentAnimOffset[1] * sprite.scaleY);
+        // 2. Offset Cámara
+        const camOffset = this.getCameraOffsets(key);
+        container.x = baseX + camOffset.x;
+        container.y = baseY + camOffset.y;
 
-        // 4. Calcular el Centro "Estable"
-        // Usamos la posición lógica + la mitad de las dimensiones estables
-        const centerX = logicalX + (stableWidth / 2);
-        const centerY = logicalY + (stableHeight / 2);
+        // 3. Zoom y Handle
+        const zoom = this.getCameraZoom(key);
+        const scaleFactor = 1 / zoom;
 
-        // 5. Aplicar
-        box.x = centerX + offsets.x;
-        box.y = centerY + offsets.y;
-    }
+        const rect = container.getByName('mainRect');
+        if (rect) rect.setScale(scaleFactor);
 
-    setVisible(visible) {
-        this.isVisible = visible;
-        if (!visible) {
-            this.bfBox.setVisible(false);
-            this.dadBox.setVisible(false);
-            this.gfBox.setVisible(false);
+        const resizeHandle = container.getByName('resizeHandle');
+        if (resizeHandle) {
+            const cornerX = (this.baseRes.w / 2) * scaleFactor;
+            const cornerY = (this.baseRes.h / 2) * scaleFactor;
+            resizeHandle.setPosition(cornerX, cornerY);
+            resizeHandle.setScale(1);
         }
     }
 
-    destroy() {
-        this.group.destroy(true);
+    _createInteractiveBox(color, key) {
+        const container = this.scene.add.container(0, 0);
+        container.setDepth(9999).setVisible(false);
+
+        // Rectángulo
+        const r = this.scene.add.rectangle(0, 0, this.baseRes.w, this.baseRes.h);
+        r.setStrokeStyle(4, color, 0.8).setFillStyle(color, 0.1);
+        r.setName('mainRect');
+
+        // Cruz
+        const crossSize = 30;
+        const vLine = this.scene.add.rectangle(0, 0, 4, crossSize, 0xffffff);
+        const hLine = this.scene.add.rectangle(0, 0, crossSize, 4, 0xffffff);
+
+        // Zona Arrastre
+        const centerZone = this.scene.add.zone(0, 0, 80, 80);
+        centerZone.setOrigin(0.5);
+        centerZone.setInteractive({ cursor: 'move', draggable: true, useHandCursor: true });
+
+        centerZone.on('drag', (pointer) => {
+            const zoom = this.scene.cameras.main.zoom;
+            const deltaX = (pointer.x - pointer.prevPosition.x) / zoom;
+            const deltaY = (pointer.y - pointer.prevPosition.y) / zoom;
+
+            const current = this.getCameraOffsets(key);
+            this.setCameraOffset(key, current.x + deltaX, current.y + deltaY);
+            this._notifyUpdate(key);
+        });
+
+        // Handle Redimensión (Más pequeño)
+        const handleSize = 12; // [MODIFICADO] Mucho más pequeño
+        const resizeHandle = this.scene.add.rectangle(0, 0, handleSize, handleSize, 0xffffff);
+        resizeHandle.setStrokeStyle(2, 0x000000);
+        resizeHandle.setName('resizeHandle');
+        resizeHandle.setInteractive({ cursor: 'nwse-resize', draggable: true, useHandCursor: true });
+
+        resizeHandle.on('drag', (pointer) => {
+            const mouseWorldX = pointer.worldX;
+            const containerWorldX = container.x;
+            const distFromCenter = Math.abs(mouseWorldX - containerWorldX);
+
+            const newWidth = Math.max(200, distFromCenter * 2);
+            let newZoom = this.baseRes.w / newWidth;
+
+            // [MODIFICADO] Mínimo 0.30
+            newZoom = Phaser.Math.Clamp(newZoom, 0.30, 2);
+
+            this.setCameraZoom(key, newZoom);
+            this._notifyUpdate(key);
+        });
+
+        container.add([r, vLine, hLine, centerZone, resizeHandle]);
+        if (this.scene.cameraManager) this.scene.cameraManager.assignToGame(container);
+
+        return container;
     }
+
+    _notifyUpdate(charKey) {
+        if (!this.controller.characters?.characterElements) return;
+        const { bf, dad, gf } = this.controller.characters.characterElements;
+
+        let targetSprite = null;
+        if (charKey === 'player') targetSprite = bf;
+        else if (charKey === 'enemy') targetSprite = dad;
+        else if (charKey === 'gfVersion') targetSprite = gf;
+
+        if (targetSprite) {
+            targetSprite.setData('cameraOffset', this.getCameraOffsets(charKey));
+            targetSprite.setData('camZoom', this.getCameraZoom(charKey));
+            this.scene.events.emit('element_updated', targetSprite);
+        }
+    }
+
+    getCameraOffsets(key) { return this.cameraOffsets.get(key) || { x: 0, y: 0 }; }
+    setCameraOffset(key, x, y) { this.cameraOffsets.set(key, { x, y }); this.update(); }
+    getCameraZoom(key) { return this.cameraZooms.get(key) || 1; }
+    setCameraZoom(key, z) { this.cameraZooms.set(key, z); this.update(); }
+    setVisible(v) { this.isVisible = v; if (!v) Object.values(this.boxes).forEach(b => b.setVisible(false)); else this.update(); }
+    destroy() { Object.values(this.boxes).forEach(b => b.destroy()); }
 }
