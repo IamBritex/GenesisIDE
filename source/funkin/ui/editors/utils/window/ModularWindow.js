@@ -25,6 +25,9 @@ export class ModularWindow {
 
         this.storageKey = this.config.id || this.config.title;
 
+        // [NUEVO] Identificar ventanas que no deben destruirse al cerrar
+        this.isPersistent = (this.config.id === 'explorer' || this.config.id === 'properties' || this.config.id === 'timeline');
+
         const builder = new WindowDOMBuilder(scene, this.config, doc);
         const { domElement, windowNode } = builder.build();
         this.domElement = domElement;
@@ -41,6 +44,7 @@ export class ModularWindow {
         const occupancyChecker = (side) => {
             return ModularWindow.openPopups.some(win =>
                 win !== this &&
+                win.windowNode.style.display !== 'none' && // Ignorar ventanas ocultas
                 win.interaction &&
                 win.interaction.state.dockSide === side
             );
@@ -65,22 +69,29 @@ export class ModularWindow {
 
         ModularWindow.openPopups.push(this);
 
-        // [MODIFICADO] Lógica de sonido: Evitar sonar en ventanas por defecto
         const defaultWindows = ['tool-bar', 'bottom-bar', 'explorer', 'properties', 'tab-bar'];
-        // Si tiene ID y está en la lista, no suena. Si no tiene ID o no está, suena 'openWindow'.
         if (!this.config.id || !defaultWindows.includes(this.config.id)) {
             this._playSound('openWindow');
         }
 
         this.focus();
-        this.domElement.node.style.visibility = 'visible';
+        this.windowNode.style.visibility = 'visible';
 
-        // [NUEVO] Notificar al layout manager que se abrió una ventana
+        // Asegurar que sea visible (por si fue re-creada o algo)
+        this.windowNode.style.display = 'flex';
+
         window.dispatchEvent(new CustomEvent('layout-update'));
     }
 
     focus() {
         if (!this.domElement) return;
+
+        // Si estaba oculta, mostrarla
+        if (this.windowNode.style.display === 'none') {
+            this.windowNode.style.display = 'flex';
+            window.dispatchEvent(new CustomEvent('layout-update'));
+        }
+
         if (this.config.alwaysOnTop) {
             this.domElement.setDepth(ModularWindow.getNextTopDepth());
             return;
@@ -137,24 +148,29 @@ export class ModularWindow {
         try { if (this.scene.cache.audio.exists(key)) this.scene.sound.play(key); } catch (e) { }
     }
 
-    get isDocked() { return this.interaction.state.isDocked; }
-    set isDocked(val) { this.interaction.state.isDocked = val; }
+    get isDocked() { return this.interaction ? this.interaction.state.isDocked : false; }
+    set isDocked(val) { if (this.interaction) this.interaction.state.isDocked = val; }
     onDragStart = null;
     onDragMove = null;
     onDragEnd = null;
 
     close() {
-        // [MODIFICADO] Sonido al cerrar
         this._playSound('exitWindow');
-
         this._saveCurrentPosition();
+
+        // [MODIFICADO] Si es persistente, SOLO OCULTAR
+        if (this.isPersistent) {
+            this.windowNode.style.display = 'none';
+            // Notificar al layout manager para que ocupe el espacio vacío
+            window.dispatchEvent(new CustomEvent('layout-update'));
+            return;
+        }
+
+        // --- Lógica normal de destrucción para ventanas temporales ---
         this.windowNode.classList.add('closing');
         if (this.interaction) this.interaction.destroy();
 
-        // 1. Quitar del array PRIMERO para que el LayoutManager ya no la vea
         ModularWindow.openPopups = ModularWindow.openPopups.filter(p => p !== this);
-
-        // 2. [IMPORTANTE] Emitir evento para reajustar el TabBar
         window.dispatchEvent(new CustomEvent('layout-update'));
 
         setTimeout(() => {

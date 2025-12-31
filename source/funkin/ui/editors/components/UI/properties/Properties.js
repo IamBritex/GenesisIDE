@@ -10,15 +10,14 @@ export default class Properties {
         this.scene = scene;
         this.selectedElement = null;
         this.currentViewType = null;
+        this.actionHistory = null;
 
-        // Carga de Templates HTML
         this.templates = {
             character: this.scene.cache.html.get('stage_properties_characters'),
             image: this.scene.cache.html.get('stage_properties_images'),
             spritesheet: this.scene.cache.html.get('stage_properties_sprites')
         };
 
-        // Instancias de los manejadores modulares
         this.handlers = {
             character: new StageCharacterProperties(scene),
             image: new StageImagesProperties(scene),
@@ -28,6 +27,13 @@ export default class Properties {
         this.initListeners();
     }
 
+    setActionHistory(history) {
+        this.actionHistory = history;
+        Object.values(this.handlers).forEach(h => {
+            if (h.setActionHistory) h.setActionHistory(history);
+        });
+    }
+
     getFieldsContainer() {
         return document.getElementById('prop-fields');
     }
@@ -35,7 +41,6 @@ export default class Properties {
     initListeners() {
         this.scene.events.on('element_selected', (element) => this.onElementSelected(element));
 
-        // Actualización en tiempo real (cuando se arrastra el objeto)
         this.scene.events.on('element_updated', (element) => {
             if (this.selectedElement === element && this.currentViewType) {
                 this.handlers[this.currentViewType].updateValues(element);
@@ -56,11 +61,16 @@ export default class Properties {
     }
 
     onElementSelected(element) {
+        // [SOLUCIÓN] Si el elemento es null (por ejemplo, al cortar), limpiamos la UI y salimos.
+        if (!element) {
+            this.scene.events.emit('element_deselected');
+            return;
+        }
+
         this.selectedElement = element;
         const container = this.getFieldsContainer();
         if (!container) return;
 
-        // Determinar tipo
         const type = element.getData('type');
         let targetType = 'character';
 
@@ -68,19 +78,15 @@ export default class Properties {
         else if (type === 'spritesheet') targetType = 'spritesheet';
         else if (type === 'character') targetType = 'character';
 
-        // Renderizar si cambia el tipo de vista
         if (this.currentViewType !== targetType) {
             if (this.templates[targetType]) {
                 container.innerHTML = this.templates[targetType];
                 this.currentViewType = targetType;
-
-                // Enlazar eventos del DOM usando el handler específico
                 this.handlers[targetType].bind(element);
             } else {
                 container.innerHTML = `<div style="padding:10px; color:red;">Template not found for: ${targetType}</div>`;
             }
         } else {
-            // Si es el mismo tipo, re-enlazamos por si cambiamos de un sprite a otro del mismo tipo
             this.handlers[targetType].bind(element);
         }
 
@@ -88,7 +94,6 @@ export default class Properties {
         const noSel = document.getElementById('noSelectionMsg');
         if (noSel) noSel.style.display = 'none';
 
-        // Llenar valores iniciales
         this.handlers[targetType].updateValues(element);
     }
 }

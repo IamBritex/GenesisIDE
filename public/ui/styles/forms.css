@@ -49,11 +49,6 @@ input[type="number"]::-webkit-outer-spin-button {
 
     /* Fondo transparente */
     background: transparent;
-
-    /* Filtro para Azul (#3498db aprox) */
-    /* Invertimos el negro a blanco y rotamos el hue */
-    filter: invert(45%) sepia(90%) saturate(1500%) hue-rotate(185deg) brightness(1.1) contrast(1.2);
-
     cursor: pointer;
     height: auto;
     /* Ajuste de márgenes para que no se aplaste */

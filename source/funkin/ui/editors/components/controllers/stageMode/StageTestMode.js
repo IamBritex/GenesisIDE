@@ -14,19 +14,7 @@ export default class StageTestMode {
         this.targetZoom = 1;
         this.lerpSpeed = 0.04;
 
-        this.onKeyDown = this.onKeyDown.bind(this);
-        this._setupInput();
-    }
-
-    _setupInput() { this.scene.input.keyboard.on('keydown', this.onKeyDown); }
-
-    onKeyDown(event) {
-        if (event.key === 'Enter') {
-            const active = document.activeElement;
-            const isTyping = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable);
-            if (isTyping) { active.blur(); return; }
-            this.toggle();
-        }
+        // [LIMPIEZA] Ya no se bindea el teclado aquí
     }
 
     toggle() { this.isActive ? this.stop() : this.start(); }
@@ -38,7 +26,6 @@ export default class StageTestMode {
         this.lastBeat = -1;
         this.seqIndex = 0;
 
-        // Init Lerp
         this.targetPos.x = this.scene.cameras.main.scrollX + (this.scene.cameras.main.width / 2);
         this.targetPos.y = this.scene.cameras.main.scrollY + (this.scene.cameras.main.height / 2);
         this.targetZoom = this.scene.cameras.main.zoom;
@@ -68,7 +55,6 @@ export default class StageTestMode {
     update(time, delta) {
         if (!this.isActive || !this.charController) return;
 
-        // Ritmo
         const bpm = this.charController.bpm || 100;
         const songPos = this.charController.fakeSongPosition;
         const crochet = 60000 / bpm;
@@ -79,7 +65,6 @@ export default class StageTestMode {
             if (curBeat % 4 === 0) this._switchCameraToNext();
         }
 
-        // LERP
         const cam = this.scene.cameras.main;
         const newZoom = cam.zoom + (this.targetZoom - cam.zoom) * this.lerpSpeed;
         cam.setZoom(newZoom);
@@ -100,7 +85,6 @@ export default class StageTestMode {
     _calculateTarget(charKey) {
         if (!this.charController) return;
 
-        // 1. Posición
         const anchor = this.charController.anchors ? this.charController.anchors[charKey] : null;
         const camOffset = this.charController.getCameraOffsets(charKey);
         let finalX = 0, finalY = 0;
@@ -127,10 +111,6 @@ export default class StageTestMode {
 
         this.targetPos.x = finalX;
         this.targetPos.y = finalY;
-
-        // 2. Zoom [MODIFICADO]
-        // Ahora usamos el zoom configurado por el usuario en las cajas
-        // en lugar de calcular un auto-fit.
         this.targetZoom = this.charController.getCameraZoom(charKey);
     }
 
@@ -139,5 +119,8 @@ export default class StageTestMode {
         if (this.scene.sys.game.domContainer) this.scene.sys.game.domContainer.style.visibility = visible ? 'visible' : 'hidden';
     }
 
-    destroy() { this.stop(); this.scene.input.keyboard.off('keydown', this.onKeyDown); }
+    destroy() {
+        this.stop();
+        // [LIMPIEZA] Eliminados listeners de teclado
+    }
 }

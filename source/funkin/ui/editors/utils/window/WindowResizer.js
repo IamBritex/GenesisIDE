@@ -54,21 +54,13 @@ export default class WindowResizer {
     _onStart(e) {
         if (e.button !== 0 || this.config.resizable === false) return;
 
-        // --- [LÓGICA DE DOCKING AGREGADA] ---
+        // Lógica de Docking: Restringir direcciones
         if (this.state.isDocked) {
             const side = this.state.dockSide;
             const dir = e.target.dataset.resizeDir;
-
-            // Si está a la izquierda, SOLO permitir redimensionar hacia el Este ('e')
             if (side === 'left' && dir !== 'e') return;
-
-            // Si está a la derecha, SOLO permitir redimensionar hacia el Oeste ('w')
             if (side === 'right' && dir !== 'w') return;
-
-            // Si hubiera docking arriba/abajo en el futuro, se añadiría aquí.
-            // Esto bloquea efectivamente esquinas y lados verticales.
         }
-        // ------------------------------------
 
         e.stopPropagation(); e.preventDefault();
 
@@ -93,7 +85,8 @@ export default class WindowResizer {
         const deltaX = (e.clientX - this.resizeStart.x) / scaleX;
         const deltaY = (e.clientY - this.resizeStart.y) / scaleY;
 
-        const minW = this.config.minWidth || 150;
+        // [MODIFICADO] Mínimo ancho reducido a 50px
+        const minW = this.config.minWidth || 50;
         const minH = this.config.minHeight || 100;
         const dir = this.activeDirection;
 
@@ -135,7 +128,6 @@ export default class WindowResizer {
             this.state.isResizing = false;
             this.activeDirection = null;
             document.body.style.cursor = '';
-
             window.dispatchEvent(new CustomEvent('layout-update'));
         }
     }

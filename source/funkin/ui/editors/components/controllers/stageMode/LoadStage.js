@@ -15,23 +15,16 @@ export default class LoadStage {
         }
 
         console.log(`[LoadStage] Procesando stage: ${stageName}`);
-
-        // Aplanamos la estructura para extraer elementos dentro de Grupos
         const flattenedItems = this._flattenStageData(jsonContent.stage);
 
-        console.log(`[LoadStage] Elementos encontrados (total): ${flattenedItems.length}`);
-
-        // 1. Cargar Imágenes Estáticas
         if (this.imagesController) {
             this.imagesController.loadImages(stageName, flattenedItems);
         }
 
-        // 2. Cargar Spritesheets Animados
         if (this.spriteController) {
             this.spriteController.loadSprites(stageName, flattenedItems);
         }
 
-        // 3. Procesar Personajes
         flattenedItems.forEach((item) => {
             if (item.type === 'character') {
                 this.processCharacterData(item, charController);
@@ -41,7 +34,6 @@ export default class LoadStage {
 
     _flattenStageData(items) {
         let result = [];
-
         items.forEach(item => {
             let content = item;
             let role = null;
@@ -49,7 +41,6 @@ export default class LoadStage {
             if (!item.type) {
                 const keys = Object.keys(item);
                 const knownRoles = ['player', 'boyfriend', 'bf', 'enemy', 'dad', 'opponent', 'playergf', 'gf', 'girlfriend', 'Group', 'group'];
-
                 let foundKey = knownRoles.find(k => item[k]);
                 if (!foundKey && keys.length === 1) foundKey = keys[0];
 
@@ -62,33 +53,35 @@ export default class LoadStage {
             if (!content) return;
 
             if (content.type === 'group' && Array.isArray(content.children)) {
-                const childrenFlat = this._flattenStageData(content.children);
-                result = result.concat(childrenFlat);
+                result = result.concat(this._flattenStageData(content.children));
             } else {
                 const processedItem = { ...content };
-                if (role) processedItem._role = role;
+                if (role && role.toLowerCase() !== 'group') {
+                    processedItem._role = role;
+                    if (!processedItem.type) processedItem.type = 'character';
+                }
                 result.push(processedItem);
             }
         });
-
         return result;
     }
 
     processCharacterData(data, charController) {
-        const role = (data._role || '').toLowerCase();
+        let role = (data._role || '').toLowerCase();
 
-        // GF
-        if (role === 'playergf' || role === 'gf' || role === 'girlfriend') {
+        if (role === 'playergf' || role === 'girlfriend') role = 'gf';
+        if (role === 'opponent' || role === 'enemy') role = 'dad';
+        if (role === 'boyfriend' || role === 'player') role = 'bf';
+
+        if (role === 'gf') {
             const char = this.getCharacterReference('gf', charController);
             if (char) this.applyCharProperties(char, data, 'GF', charController, 'gfVersion');
         }
-        // DAD / ENEMY
-        else if (role === 'enemy' || role === 'dad' || role === 'opponent') {
+        else if (role === 'dad') {
             const char = this.getCharacterReference('dad', charController);
             if (char) this.applyCharProperties(char, data, 'DAD', charController, 'enemy');
         }
-        // BF / PLAYER
-        else if (role === 'player' || role === 'boyfriend' || role === 'bf') {
+        else if (role === 'bf') {
             const char = this.getCharacterReference('boyfriend', charController);
             if (char) this.applyCharProperties(char, data, 'BOYFRIEND', charController, 'player');
         }
@@ -109,20 +102,19 @@ export default class LoadStage {
     applyCharProperties(char, data, debugName, charController = null, internalKey = null) {
         if (!char) return;
 
-        // Escala
-        if (typeof data.scale === 'number') char.setScale(data.scale);
+        // [CORRECCIÓN CRÍTICA] Soporte para Array de Escala
+        if (typeof data.scale === 'number') {
+            char.setScale(data.scale);
+        } else if (Array.isArray(data.scale)) {
+            char.setScale(data.scale[0], data.scale[1]);
+        }
 
-        // [CORREGIDO] Cálculo de Posición (Anchor logic)
-        // Ajustamos para que la coordenada X,Y sea el centro de los pies, no la esquina superior izquierda
+        // Posición
         if (data.position && Array.isArray(data.position)) {
             const sW = char.width * char.scaleX;
             const sH = char.height * char.scaleY;
-
-            // X: Centrado (Restamos la mitad del ancho)
             const visualX = data.position[0] - (sW / 2);
-            // Y: Pies (Restamos la altura completa)
             const visualY = data.position[1] - sH;
-
             char.setPosition(visualX, visualY);
         }
 
@@ -131,12 +123,13 @@ export default class LoadStage {
         if (data.opacity !== undefined) char.setAlpha(data.opacity);
         if (data.flip_x !== undefined) char.setFlipX(data.flip_x);
         if (data.flip_y !== undefined) char.setFlipY(data.flip_y);
+
         if (typeof data.layer === 'number') char.setDepth(data.layer);
 
         if (typeof data.scrollFactor === 'number') char.setScrollFactor(data.scrollFactor);
         else if (Array.isArray(data.scrollFactor)) char.setScrollFactor(data.scrollFactor[0], data.scrollFactor[1]);
 
-        // Propiedades de Cámara
+        // Cámara
         if (charController && internalKey) {
             if (data.camera_Offset && Array.isArray(data.camera_Offset)) {
                 charController.setCameraOffset(internalKey, data.camera_Offset[0], data.camera_Offset[1]);

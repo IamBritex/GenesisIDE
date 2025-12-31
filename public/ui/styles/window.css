@@ -1,15 +1,14 @@
-/* public/ui/styles/window.css */
+/* ui/styles/window.css */
 .modular-window {
     display: flex;
     flex-direction: column;
     background-color: var(--bg-window);
     border-radius: var(--radius-main);
-
-    /* Borde normal para ventanas con título */
     border: 1px solid var(--border-subtle);
     box-shadow: var(--shadow-window);
-
     overflow: hidden;
+    position: absolute;
+    /* [IMPORTANTE] Asegura que respete las coordenadas y tamaño */
 
     animation: window-entry var(--anim-speed) var(--anim-ease) forwards;
 
@@ -20,7 +19,6 @@
     will-change: height, transform;
 }
 
-/* [FIX] Reglas para Toolbar (sin título) */
 .modular-window.no-title-bar {
     border: none !important;
     border-radius: 0 !important;
@@ -78,26 +76,47 @@
     flex-direction: column;
     height: 100%;
     width: 100%;
-    overflow: hidden;
+
+    /* [CORRECCIÓN CRÍTICA] */
+    min-height: 0;
+    /* Evita que el contenido flex rompa la altura del padre */
+    overflow-x: hidden;
+    overflow-y: auto;
+    /* Permite scroll si el contenido es muy largo */
+
     position: relative;
     margin: 0;
     padding: 0;
-    /* Transición suave para cuando se restaura */
     transition: opacity 0.2s ease, visibility 0s linear 0s;
     opacity: 1;
     visibility: visible;
 }
 
-/* [CORRECCIÓN CRÍTICA] Ocultar TODO el contenido al minimizar */
+/* Scrollbar personalizado sutil */
+.window-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.window-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.window-content::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 3px;
+}
+
+.window-content::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
 .modular-window.minimized .window-content {
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
-    /* Retrasamos visibility hidden para permitir que opacity anime primero */
     transition: opacity 0.2s ease, visibility 0s linear 0.2s;
 }
 
-/* También ocultamos el modal-container por si acaso se usa fuera del content */
 .modular-window.minimized .modal-container {
     opacity: 0;
     pointer-events: none;

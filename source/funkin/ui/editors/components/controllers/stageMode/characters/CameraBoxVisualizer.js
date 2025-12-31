@@ -7,6 +7,9 @@ export class CameraBoxVisualizer {
         this.controller = controller;
         this.isVisible = false;
 
+        // Estado para restaurar
+        this._wasVisibleBeforeTest = false;
+
         this.baseRes = { w: 1280, h: 720 };
 
         this.cameraOffsets = new Map([
@@ -26,6 +29,31 @@ export class CameraBoxVisualizer {
             enemy: this._createInteractiveBox(0xff0000, 'enemy'),
             gfVersion: this._createInteractiveBox(0xffff00, 'gfVersion')
         };
+
+        this._onToggle = this._onToggle.bind(this);
+        this._onTestStart = this._onTestStart.bind(this);
+        this._onTestEnd = this._onTestEnd.bind(this);
+
+        window.addEventListener('editor-view-cameraboxes', this._onToggle);
+        window.addEventListener('editor-test-start', this._onTestStart);
+        window.addEventListener('editor-test-end', this._onTestEnd);
+    }
+
+    _onToggle() {
+        this.setVisible(!this.isVisible);
+    }
+
+    // [NUEVO]
+    _onTestStart() {
+        this._wasVisibleBeforeTest = this.isVisible;
+        this.setVisible(false);
+    }
+
+    // [NUEVO]
+    _onTestEnd() {
+        if (this._wasVisibleBeforeTest) {
+            this.setVisible(true);
+        }
     }
 
     update() {
@@ -44,7 +72,6 @@ export class CameraBoxVisualizer {
         }
         container.setVisible(true);
 
-        // 1. Posición Base
         let baseX, baseY;
         const anchor = this.controller.anchors ? this.controller.anchors[key] : null;
 
@@ -60,12 +87,10 @@ export class CameraBoxVisualizer {
             baseY = sprite.y + offset.y;
         }
 
-        // 2. Offset Cámara
         const camOffset = this.getCameraOffsets(key);
         container.x = baseX + camOffset.x;
         container.y = baseY + camOffset.y;
 
-        // 3. Zoom y Handle
         const zoom = this.getCameraZoom(key);
         const scaleFactor = 1 / zoom;
 
@@ -85,17 +110,14 @@ export class CameraBoxVisualizer {
         const container = this.scene.add.container(0, 0);
         container.setDepth(9999).setVisible(false);
 
-        // Rectángulo
         const r = this.scene.add.rectangle(0, 0, this.baseRes.w, this.baseRes.h);
         r.setStrokeStyle(4, color, 0.8).setFillStyle(color, 0.1);
         r.setName('mainRect');
 
-        // Cruz
         const crossSize = 30;
         const vLine = this.scene.add.rectangle(0, 0, 4, crossSize, 0xffffff);
         const hLine = this.scene.add.rectangle(0, 0, crossSize, 4, 0xffffff);
 
-        // Zona Arrastre
         const centerZone = this.scene.add.zone(0, 0, 80, 80);
         centerZone.setOrigin(0.5);
         centerZone.setInteractive({ cursor: 'move', draggable: true, useHandCursor: true });
@@ -110,8 +132,7 @@ export class CameraBoxVisualizer {
             this._notifyUpdate(key);
         });
 
-        // Handle Redimensión (Más pequeño)
-        const handleSize = 12; // [MODIFICADO] Mucho más pequeño
+        const handleSize = 12;
         const resizeHandle = this.scene.add.rectangle(0, 0, handleSize, handleSize, 0xffffff);
         resizeHandle.setStrokeStyle(2, 0x000000);
         resizeHandle.setName('resizeHandle');
@@ -125,7 +146,6 @@ export class CameraBoxVisualizer {
             const newWidth = Math.max(200, distFromCenter * 2);
             let newZoom = this.baseRes.w / newWidth;
 
-            // [MODIFICADO] Mínimo 0.30
             newZoom = Phaser.Math.Clamp(newZoom, 0.30, 2);
 
             this.setCameraZoom(key, newZoom);
@@ -158,6 +178,20 @@ export class CameraBoxVisualizer {
     setCameraOffset(key, x, y) { this.cameraOffsets.set(key, { x, y }); this.update(); }
     getCameraZoom(key) { return this.cameraZooms.get(key) || 1; }
     setCameraZoom(key, z) { this.cameraZooms.set(key, z); this.update(); }
-    setVisible(v) { this.isVisible = v; if (!v) Object.values(this.boxes).forEach(b => b.setVisible(false)); else this.update(); }
-    destroy() { Object.values(this.boxes).forEach(b => b.destroy()); }
+
+    setVisible(v) {
+        this.isVisible = v;
+        if (!v) {
+            Object.values(this.boxes).forEach(b => b.setVisible(false));
+        } else {
+            this.update();
+        }
+    }
+
+    destroy() {
+        window.removeEventListener('editor-view-cameraboxes', this._onToggle);
+        window.removeEventListener('editor-test-start', this._onTestStart);
+        window.removeEventListener('editor-test-end', this._onTestEnd);
+        Object.values(this.boxes).forEach(b => b.destroy());
+    }
 }

@@ -6,9 +6,11 @@
 </window-config>
 
 <style>
-    .modular-window,
-    .window-content {
+    /* Forzar visibilidad fuera de los límites */
+    #tool-bar.modular-window,
+    #tool-bar .window-content {
         overflow: visible !important;
+        z-index: 10000 !important;
     }
 
     .toolbar-container {
@@ -24,7 +26,7 @@
         user-select: none;
         padding: 0 10px;
         box-sizing: border-box;
-        overflow: visible;
+        overflow: visible !important;
     }
 
     .menu-bar {
@@ -57,7 +59,6 @@
         color: var(--text-main);
     }
 
-    /* --- DROPDOWN PRINCIPAL --- */
     .dropdown-menu {
         display: none;
         position: absolute;
@@ -110,7 +111,6 @@
         margin: 4px 0;
     }
 
-    /* --- SUBMENÚS (ANIDADOS) --- */
     .dropdown-item.has-submenu::after {
         content: '›';
         font-family: monospace;
@@ -169,42 +169,26 @@
         <div class="menu-group">
             <div class="menu-item" data-target="file-menu">File</div>
             <div class="dropdown-menu" id="file-menu">
-                <div class="dropdown-item" onclick="console.log('Action: New Project')">New Project... <span
-                        class="shortcut">Ctrl+N</span></div>
+                <div class="dropdown-item has-submenu">New
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item" onclick="console.log('Action: New Project')">New Project</div>
+                        <div class="dropdown-item" onclick="console.log('Action: New Stage')">New Stage</div>
+                        <div class="dropdown-item" onclick="console.log('Action: New Character')">New Character</div>
+                        <div class="dropdown-item" onclick="console.log('Action: New Chart')">New Chart</div>
+                    </div>
+                </div>
                 <div class="dropdown-item" onclick="console.log('Action: Open')">Open File... <span
                         class="shortcut">Ctrl+O</span></div>
-
-                <div class="dropdown-item has-submenu">
-                    Open Recent
-                    <div class="dropdown-menu">
-                        <div class="dropdown-item">Project_FNF_v1</div>
-                        <div class="dropdown-item">Week_7_Remix</div>
-                        <div class="dropdown-separator"></div>
-                        <div class="dropdown-item">Clear History</div>
-                    </div>
-                </div>
-
                 <div class="dropdown-separator"></div>
-                <div class="dropdown-item" onclick="console.log('Action: Save')">Save <span
-                        class="shortcut">Ctrl+S</span></div>
-
-                <div class="dropdown-item has-submenu">
-                    Preferences
+                <div class="dropdown-item has-submenu">Save
                     <div class="dropdown-menu">
-                        <div class="dropdown-item">Settings <span class="shortcut">Ctrl+,</span></div>
-                        <div class="dropdown-separator"></div>
-                        <div class="dropdown-item has-submenu">
-                            Theme
-                            <div class="dropdown-menu">
-                                <div class="dropdown-item">Dark Modern</div>
-                                <div class="dropdown-item">Dark High Contrast</div>
-                                <div class="dropdown-item">Light</div>
-                            </div>
-                        </div>
-                        <div class="dropdown-item">Keyboard Shortcuts</div>
+                        <div class="dropdown-item" onclick="console.log('Action: Save Project')">Save Project <span
+                                class="shortcut">Ctrl+S</span></div>
+                        <div class="dropdown-item" onclick="console.log('Action: Save Stage')">Save Stage</div>
+                        <div class="dropdown-item" onclick="console.log('Action: Save Character')">Save Character</div>
+                        <div class="dropdown-item" onclick="console.log('Action: Save Chart')">Save Chart</div>
                     </div>
                 </div>
-
                 <div class="dropdown-separator"></div>
                 <div class="dropdown-item" onclick="console.log('Action: Exit')">Exit</div>
             </div>
@@ -213,8 +197,8 @@
         <div class="menu-group">
             <div class="menu-item" data-target="edit-menu">Edit</div>
             <div class="dropdown-menu" id="edit-menu">
-                <div class="dropdown-item">Undo <span class="shortcut">Ctrl+Z</span></div>
-                <div class="dropdown-item">Redo <span class="shortcut">Ctrl+Y</span></div>
+                <div class="dropdown-item" id="menu-edit-undo">Undo <span class="shortcut">Ctrl+Z</span></div>
+                <div class="dropdown-item" id="menu-edit-redo">Redo <span class="shortcut">Ctrl+Y</span></div>
                 <div class="dropdown-separator"></div>
                 <div class="dropdown-item">Cut <span class="shortcut">Ctrl+X</span></div>
                 <div class="dropdown-item">Copy <span class="shortcut">Ctrl+C</span></div>
@@ -225,17 +209,20 @@
         <div class="menu-group">
             <div class="menu-item" data-target="view-menu">View</div>
             <div class="dropdown-menu" id="view-menu">
-                <div class="dropdown-item">Zoom In <span class="shortcut">Ctrl++</span></div>
-                <div class="dropdown-item">Zoom Out <span class="shortcut">Ctrl+-</span></div>
-                <div class="dropdown-item">Reset Zoom <span class="shortcut">Ctrl+0</span></div>
+                <div class="dropdown-item" id="menu-zoom-in">Zoom In <span class="shortcut">Ctrl +</span></div>
+                <div class="dropdown-item" id="menu-zoom-out">Zoom Out <span class="shortcut">Ctrl -</span></div>
+                <div class="dropdown-item" id="menu-zoom-reset">Reset Zoom <span class="shortcut">R</span></div>
+                <div class="dropdown-separator"></div>
+
+                <div class="dropdown-item" id="menu-view-cameraboxes">Camera Boxes <span class="shortcut">C</span></div>
+
                 <div class="dropdown-separator"></div>
 
                 <div class="dropdown-item has-submenu">
-                    Layout
+                    Windows
                     <div class="dropdown-menu">
-                        <div class="dropdown-item">Show Explorer</div>
-                        <div class="dropdown-item">Show Properties</div>
-                        <div class="dropdown-item">Show Timeline</div>
+                        <div class="dropdown-item" id="menu-win-explorer">Explorer</div>
+                        <div class="dropdown-item" id="menu-win-properties">Properties</div>
                     </div>
                 </div>
             </div>
@@ -252,18 +239,20 @@
 
     <div class="spacer"></div>
     <div class="status-info">
-        <span>Genesis Engine IDE v1.0</span>
         <div class="tool-btn" title="Settings"><span class="material-icons">settings</span></div>
     </div>
 </div>
 
 <script>
     (function () {
-        const menuItems = document.querySelectorAll('.menu-bar > .menu-group > .menu-item');
-        const menuGroups = document.querySelectorAll('.menu-group');
+        const toolbar = document.getElementById('tool-bar');
+        if (!toolbar) return;
+
+        const menuItems = toolbar.querySelectorAll('.menu-bar > .menu-group > .menu-item');
+        const menuGroups = toolbar.querySelectorAll('.menu-group');
 
         const closeAllDropdowns = () => {
-            document.querySelectorAll('.menu-bar > .menu-group > .dropdown-menu').forEach(dd => dd.classList.remove('show'));
+            toolbar.querySelectorAll('.dropdown-menu').forEach(dd => dd.classList.remove('show'));
             menuGroups.forEach(grp => grp.classList.remove('active'));
         };
 
@@ -271,38 +260,47 @@
             item.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const targetId = item.dataset.target;
-                const targetDropdown = document.getElementById(targetId);
+                const targetDropdown = toolbar.querySelector(`#${targetId}`);
                 const parentGroup = item.closest('.menu-group');
 
-                if (targetDropdown.classList.contains('show')) {
-                    closeAllDropdowns();
-                } else {
-                    closeAllDropdowns();
-                    targetDropdown.classList.add('show');
-                    parentGroup.classList.add('active');
+                if (targetDropdown) {
+                    if (targetDropdown.classList.contains('show')) closeAllDropdowns();
+                    else { closeAllDropdowns(); targetDropdown.classList.add('show'); parentGroup.classList.add('active'); }
                 }
             });
 
             item.addEventListener('mouseenter', () => {
                 let isAnyOpen = false;
-                document.querySelectorAll('.menu-bar > .menu-group > .dropdown-menu').forEach(dd => {
-                    if (dd.classList.contains('show')) isAnyOpen = true;
-                });
-
+                toolbar.querySelectorAll('.dropdown-menu').forEach(dd => { if (dd.classList.contains('show')) isAnyOpen = true; });
                 if (isAnyOpen) {
-                    const targetId = item.dataset.target;
-                    const targetDropdown = document.getElementById(targetId);
-                    const parentGroup = item.closest('.menu-group');
-
-                    closeAllDropdowns();
-                    targetDropdown.classList.add('show');
-                    parentGroup.classList.add('active');
+                    const targetId = item.dataset.target; const targetDropdown = toolbar.querySelector(`#${targetId}`); const parentGroup = item.closest('.menu-group');
+                    if (targetDropdown) { closeAllDropdowns(); targetDropdown.classList.add('show'); parentGroup.classList.add('active'); }
                 }
             });
         });
+        window.addEventListener('click', () => closeAllDropdowns());
 
-        window.addEventListener('click', () => {
-            closeAllDropdowns();
-        });
+        // --- DISPATCHERS ---
+        const bind = (id, eventName, detail = {}) => {
+            const el = toolbar.querySelector(`#${id}`);
+            if (el) {
+                el.addEventListener('click', () => {
+                    console.log(`[ToolBar] Click en ${id} -> ${eventName}`);
+                    window.dispatchEvent(new CustomEvent(eventName, { detail }));
+                    closeAllDropdowns();
+                });
+            }
+        };
+
+        bind('menu-zoom-in', 'editor-zoom-in');
+        bind('menu-zoom-out', 'editor-zoom-out');
+        bind('menu-zoom-reset', 'editor-zoom-reset');
+        bind('menu-win-explorer', 'editor-window-toggle', { id: 'explorer' });
+        bind('menu-win-properties', 'editor-window-toggle', { id: 'properties' });
+        bind('menu-view-cameraboxes', 'editor-view-cameraboxes');
+
+        // [MODIFICADO] Bindings para Undo/Redo
+        bind('menu-edit-undo', 'editor-undo');
+        bind('menu-edit-redo', 'editor-redo');
     })();
 </script>

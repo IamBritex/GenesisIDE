@@ -11,10 +11,7 @@ export default class StageSpritesProperties extends StageGeneralProperties {
     }
 
     bind(element) {
-        // Hereda bindings generales (Transform/Visuals)
         super.bind(element);
-
-        // Bindings de animaciones
         this._bindAnimInputs(element);
     }
 
@@ -36,17 +33,27 @@ export default class StageSpritesProperties extends StageGeneralProperties {
             const beatStr = ui.beats.value || "1";
             config.animation.beat = beatStr.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
 
-            // Usamos helper del padre para guardar
             element.setData('config', config);
             this.scene.events.emit('element_updated', element);
         };
 
         ui.mode.onchange = saveAnimConfig;
-        ui.fps.oninput = saveAnimConfig;
-        ui.beats.oninput = saveAnimConfig;
+
+        if (ui.fps) {
+            ui.fps.oninput = saveAnimConfig;
+            // Registrar cambio de FPS en historial usando 'animFps'
+            this._setupInput(ui.fps, 'animFps', () => (element.getData('config')?.animation?.frameRate || 24), element);
+        }
+
+        if (ui.beats) {
+            ui.beats.oninput = saveAnimConfig;
+            ui.beats.addEventListener('keydown', (e) => { if (e.key === 'Enter') ui.beats.blur(); });
+        }
 
         this._renderListLogic(element, ui, saveAnimConfig);
     }
+
+    // ... (El resto del archivo se mantiene igual: _renderListLogic, modales, etc.) ...
 
     _renderListLogic(element, ui, saveAnimConfig) {
         const getPlaylist = () => {
@@ -104,8 +111,6 @@ export default class StageSpritesProperties extends StageGeneralProperties {
         const htmlContent = this.scene.cache.text.get('windowStageAnimationsHtml');
         if (!htmlContent) return;
         const win = new ModularWindow(this.scene, { content: htmlContent });
-
-        // Copia de la lógica de texturas de versiones anteriores
         const textureKey = element.texture.key;
         const frames = this.scene.textures.get(textureKey).getFrameNames();
         const groups = {};
@@ -122,7 +127,6 @@ export default class StageSpritesProperties extends StageGeneralProperties {
             if (!groups[prefix]) groups[prefix] = { firstFrame: frameName, indices: [] };
             if (suffix) groups[prefix].indices.push(suffix);
         });
-
         const animData = [];
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -138,7 +142,6 @@ export default class StageSpritesProperties extends StageGeneralProperties {
             group.indices.sort((a, b) => parseInt(a) - parseInt(b));
             animData.push({ displayName: rawPrefix + "00", rawPrefix: rawPrefix, thumb: thumbData, allIndices: group.indices });
         });
-
         const playlist = (element.getData('config') || {}).animation?.play_list || {};
         if (window.initStageAnimModal) {
             window.initStageAnimModal({
@@ -163,7 +166,6 @@ export default class StageSpritesProperties extends StageGeneralProperties {
         super.updateValues(element);
         const elType = document.getElementById('propType');
         if (elType) elType.value = element.getData('namePath') || '';
-
         const config = element.getData('config') || {};
         if (config.animation) {
             const get = (id) => document.getElementById(id);

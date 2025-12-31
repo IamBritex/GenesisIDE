@@ -18,12 +18,10 @@ export default class TabBar {
         this.onStageSelectedHandler = (e) => this._handleExplorerSelection(e);
         window.addEventListener('editor-stage-selected', this.onStageSelectedHandler);
 
-        // [PERSISTENCIA] Escuchar datos actualizados
         this.onUpdateTabDataHandler = (e) => {
             const { id, data } = e.detail;
             const tab = this.tabs.find(t => t.id === id);
             if (tab) {
-                // Actualizamos la referencia en memoria
                 tab.data = data;
                 console.log(`[TabBar] Datos guardados en memoria para: ${tab.title}`);
             }
@@ -50,8 +48,6 @@ export default class TabBar {
 
     _createTab(id, path, data, customTitle = null) {
         let fileName = customTitle || path.split('/').pop().replace('.json', '');
-
-        // Aseguramos clonación profunda inicial para evitar referencias cruzadas
         const safeData = data ? JSON.parse(JSON.stringify(data)) : null;
 
         const tabData = { id, path, title: fileName, data: safeData };
@@ -81,32 +77,31 @@ export default class TabBar {
     setActiveTab(id) {
         if (this.activeTabId === id) return;
 
-        // [PASO 1] Antes de cambiar, forzar guardado de la pestaña actual
         if (this.activeTabId) {
             window.dispatchEvent(new CustomEvent('editor-save-request', {
                 detail: { tabId: this.activeTabId }
             }));
-            // Como dispatchEvent es síncrono para listeners en el mismo hilo,
-            // 'tab.data' se actualizará AQUÍ MISMO antes de continuar.
         }
 
-        // [PASO 2] Cambiar ID activo
         this.activeTabId = id;
 
-        // [PASO 3] Actualizar UI
         this.container.querySelectorAll('.tab-item').forEach(el => {
-            el.classList.toggle('active', el.dataset.id === id);
+            const isActive = el.dataset.id === id;
+            el.classList.toggle('active', isActive);
+            if (isActive) {
+                // [NUEVO] Hacer scroll hacia la pestaña si está fuera de vista
+                el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+            }
         });
 
-        // [PASO 4] Cargar datos frescos de la nueva pestaña
         const tabInfo = this.tabs.find(t => t.id === id);
         if (tabInfo) {
             window.dispatchEvent(new CustomEvent('editor-tab-switched', {
                 detail: {
-                    stageData: tabInfo.data, // Enviamos data (que debería estar actualizada si volvemos)
+                    stageData: tabInfo.data,
                     path: tabInfo.path,
                     fileName: tabInfo.title,
-                    tabId: tabInfo.id // IMPORTANTE: Enviamos el ID
+                    tabId: tabInfo.id
                 }
             }));
         }

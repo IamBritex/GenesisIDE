@@ -1,15 +1,11 @@
 <window-config>
     <title>Tab Bar</title>
-    <layout width="auto" height="32" x="0" y="38" />
+    <layout width="100%" height="32" x="0" y="38" />
     <behavior draggable="false" overlay="false" resizable="false" always-on-top="true" />
     <controls title="false" minimize="false" close="false" />
 </window-config>
 
 <style>
-    /* * [IMPORTANTE] Transición suave para el Docking Dinámico.
-     * Al tener el ID 'tab-bar' asignado por el WindowDOMBuilder,
-     * podemos aplicar transición directamente al contenedor de la ventana.
-     */
     #tab-bar.modular-window {
         transition: left 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
             width 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -18,7 +14,8 @@
 
     .modular-window,
     .window-content {
-        overflow: visible !important;
+        overflow: hidden !important;
+        /* El scroll lo maneja el container interno */
         background-color: transparent !important;
         box-shadow: none !important;
     }
@@ -32,14 +29,26 @@
         border-bottom: 1px solid var(--border-subtle);
         padding-left: 0;
         box-sizing: border-box;
+
+        /* [SOLUCIÓN] Activar Scroll Horizontal */
         overflow-x: auto;
         overflow-y: hidden;
     }
 
-    /* Ocultar scrollbar */
+    /* Estilo de Scrollbar fino (estilo IDE) */
     .tab-bar-container::-webkit-scrollbar {
-        height: 0px;
+        height: 3px;
+        /* Muy fino */
         background: transparent;
+    }
+
+    .tab-bar-container::-webkit-scrollbar-thumb {
+        background: var(--border-subtle);
+        border-radius: 2px;
+    }
+
+    .tab-bar-container::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-color);
     }
 
     .tab-item {
@@ -58,6 +67,9 @@
         user-select: none;
         position: relative;
         transition: background 0.1s;
+
+        /* [SOLUCIÓN CRÍTICA] Evita que las pestañas se aplasten */
+        flex-shrink: 0;
     }
 
     .tab-item:hover {
@@ -109,16 +121,6 @@
 </style>
 
 <div class="tab-bar-container" id="tabContainer">
-    <div class="tab-item active">
-        <span class="material-icons tab-icon">grid_on</span>
-        <span class="tab-label">Stage 1</span>
-        <span class="tab-close material-icons">close</span>
-    </div>
-    <div class="tab-item">
-        <span class="material-icons tab-icon">accessibility</span>
-        <span class="tab-label">Dad</span>
-        <span class="tab-close material-icons">close</span>
-    </div>
 </div>
 
 <script>
@@ -126,12 +128,24 @@
         const container = document.getElementById('tabContainer');
         if (!container) return;
 
+        // Habilitar scroll con rueda del ratón (Shift + Scroll vertical = Scroll horizontal)
+        container.addEventListener('wheel', (e) => {
+            if (e.deltaY !== 0) {
+                // Si el usuario no pulsa Shift, convertimos el scroll vertical en horizontal
+                // para mayor comodidad en la barra de pestañas
+                if (Math.abs(e.deltaX) === 0) {
+                    container.scrollLeft += e.deltaY;
+                    e.preventDefault();
+                }
+            }
+        }, { passive: false });
+
         container.addEventListener('click', (e) => {
             const tab = e.target.closest('.tab-item');
             if (tab) {
                 if (e.target.closest('.tab-close')) {
                     e.stopPropagation();
-                    tab.remove();
+                    // La lógica real de borrado está en tabbar.js, esto es solo visual/fallback
                     return;
                 }
                 container.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));

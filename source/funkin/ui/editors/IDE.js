@@ -9,14 +9,15 @@ import CleanStateManager from './managers/cleanStateManager.js';
 import EditorModes from './modes/editorModes.js';
 import DockLayoutManager from './managers/DockLayoutManager.js';
 import Properties from './components/UI/properties/Properties.js';
-
-// [NUEVO] Importamos el gestor de pestañas
 import TabBar from './components/UI/tabBar/tabbar.js';
+
+// [CRÍTICO] Asegúrate de que esta línea esté presente
+import ZoomTool from './components/UI/tools/view/zoom.js';
 
 export class IDE extends Phaser.Scene {
     constructor() {
         super({ key: 'IDE' });
-
+        this.zoomTool = null;
         this.cameraManager = null;
         this.checkboard = null;
         this.toast = null;
@@ -24,8 +25,6 @@ export class IDE extends Phaser.Scene {
         this.layoutManager = null;
         this.modalListener = null;
         this.properties = null;
-
-        // [NUEVO] Referencia al TabBar
         this.tabBar = null;
     }
 
@@ -34,32 +33,23 @@ export class IDE extends Phaser.Scene {
     }
 
     create() {
-        // 1. Sistemas Core
         this.cameraManager = new CameraManager(this);
         this.checkboard = new Checkboard(this, this.cameraManager);
         new MouseHandler(this);
-
-        // 2. Sistemas UI
         this.toast = new ToastManager(this);
         this.editorModes = new EditorModes(this);
         this.layoutManager = new DockLayoutManager(this);
 
-        // 3. Ventanas
-        DefaultWindowsOpened.open(this);
+        // [CRÍTICO] Instanciar el ZoomTool aquí
+        this.zoomTool = new ZoomTool(this);
 
-        // [NUEVO] Inicializar TabBar
-        // Usamos un pequeño delay para asegurar que DefaultWindowsOpened haya creado el HTML
+        DefaultWindowsOpened.open(this);
         this.time.delayedCall(100, () => {
             this.tabBar = new TabBar(this);
         });
-
-        // Inicializar Properties para que escuche los eventos
         this.properties = new Properties(this);
-
-        // 4. Eventos
         this._setupListeners();
 
-        // [DEBUG]
         this.input.keyboard.on('keydown-M', () => {
             const content = this.cache.text.get('modalHtml');
             if (content) new ModularWindow(this, content);
@@ -73,6 +63,15 @@ export class IDE extends Phaser.Scene {
             this.toast.show('Entidad Creada', `${name} (${type})`, 'success');
         };
         window.addEventListener('modal-save', this.modalListener);
+
+        // [NUEVO] Listener para abrir/cerrar ventanas desde el menú
+        this.windowToggleListener = (e) => {
+            const winId = e.detail.id;
+            if (winId) {
+                DefaultWindowsOpened.toggleWindow(this, winId);
+            }
+        };
+        window.addEventListener('editor-window-toggle', this.windowToggleListener);
     }
 
     update(time, delta) {
@@ -81,14 +80,12 @@ export class IDE extends Phaser.Scene {
 
     shutdown() {
         CleanStateManager.clean(this);
-        if (this.properties) {
-            this.properties = null;
-        }
-        // [NUEVO] Limpiar TabBar al salir
-        if (this.tabBar) {
-            this.tabBar.destroy();
-            this.tabBar = null;
-        }
+        if (this.properties) this.properties = null;
+        if (this.tabBar) { this.tabBar.destroy(); this.tabBar = null; }
+        if (this.zoomTool) { this.zoomTool.destroy(); this.zoomTool = null; }
+
+        // [IMPORTANTE] Remover listener
+        window.removeEventListener('editor-window-toggle', this.windowToggleListener);
     }
 }
 
