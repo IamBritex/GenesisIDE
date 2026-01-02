@@ -223,6 +223,7 @@
                     <div class="dropdown-menu">
                         <div class="dropdown-item" id="menu-win-explorer">Explorer</div>
                         <div class="dropdown-item" id="menu-win-properties">Properties</div>
+                        <div class="dropdown-item" id="menu-win-layers">Layers</div>
                     </div>
                 </div>
             </div>
@@ -299,7 +300,9 @@
         bind('menu-win-properties', 'editor-window-toggle', { id: 'properties' });
         bind('menu-view-cameraboxes', 'editor-view-cameraboxes');
 
-        // [MODIFICADO] Bindings para Undo/Redo
+        // [NUEVO] Bind para Layers
+        bind('menu-win-layers', 'editor-window-toggle', { id: 'stage-layer' });
+
         bind('menu-edit-undo', 'editor-undo');
         bind('menu-edit-redo', 'editor-redo');
     })();

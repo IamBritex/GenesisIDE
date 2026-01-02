@@ -16,6 +16,6 @@ export default class WindowsPreload {
         scene.load.text('toastHtml', 'public/ui/toast.html');
         scene.load.text('tabBarHtml', 'public/ui/editors/tabBar.html');
         scene.load.text('windowStageAnimationsHtml', 'public/ui/editors/window_stage_animations.html');
-
+        scene.load.text('stageLayerHtml', 'public/ui/editors/stage_layer.html');
     }
 }

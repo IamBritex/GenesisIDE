@@ -1,3 +1,4 @@
+
 /**
  * source/funkin/ui/editors/modes/stageMode.js
  */
@@ -11,9 +12,10 @@ import SaveTabs from '../../editors/components/UI/tabBar/saveTabs.js';
 import ActionHistory from '../inputs/shortCuts/saveAllActions.js';
 import ShortCuts from '../inputs/shortCuts/shortCuts.js';
 import BoundingBoxConfig from '../../editors/components/controllers/stageMode/characters/BoundingBoxConfig.js';
-
-// [NUEVO] Importar controles de edición
 import EditControls from '../../editors/components/UI/tools/edit/controls.js';
+
+// [NUEVO] Importar StageLayer
+import StageLayer from '../../editors/components/UI/layer/StageLayer.js';
 
 export default class StageMode {
     constructor(scene) {
@@ -32,12 +34,13 @@ export default class StageMode {
 
         this.loadStage = new LoadStage(scene, this.imagesController, this.spriteController);
 
-        // [NUEVO] Instanciar controles de edición (Copy/Paste)
         this.editControls = new EditControls(scene, this.actionHistory, {
             images: this.imagesController,
             sprites: this.spriteController,
-            // characters: this.charactersController // Opcional si se implementa a futuro
         });
+
+        // [NUEVO] Instanciar Controlador de Capas
+        this.stageLayer = new StageLayer(scene);
 
         this.onTabSwitched = this.onTabSwitched.bind(this);
         this.onAllTabsClosed = this.onAllTabsClosed.bind(this);
@@ -90,6 +93,12 @@ export default class StageMode {
 
         if (this.testMode && this.testMode.isTesting) this.testMode.stopTest();
 
+        // [NUEVO] Cerrar ventana de capas si está abierta al salir del modo
+        if (this.stageLayer) {
+            // Opcional: Podrías querer que persista, pero generalmente es mejor ocultarla
+            // this.stageLayer.close(); 
+        }
+
         window.removeEventListener('editor-tab-switched', this.onTabSwitched);
         window.removeEventListener('editor-all-tabs-closed', this.onAllTabsClosed);
         window.removeEventListener('editor-save-request', this.onSaveRequest);
@@ -104,7 +113,6 @@ export default class StageMode {
         }
     }
 
-    // ... (Resto de métodos: onSaveRequest, onTabSwitched, etc. se mantienen igual) ...
     onSaveRequest(event) {
         const { tabId } = event.detail;
         if (this.currentTabId === tabId) {
@@ -132,6 +140,9 @@ export default class StageMode {
         if (this.currentStageData.defaultZoom && this.scene.cameraManager) {
             this.scene.cameraManager.gameCamera.setZoom(this.currentStageData.defaultZoom);
         }
+
+        // [NUEVO] Forzar actualización de capas al cambiar pestaña
+        if (this.stageLayer) this.stageLayer.requestUpdate();
     }
 
     onAllTabsClosed() {
@@ -141,6 +152,9 @@ export default class StageMode {
         if (this.imagesController) this.imagesController.clear();
         if (this.spriteController) this.spriteController.clear();
         if (this.charactersController) this.charactersController.setVisible(false);
+
+        // [NUEVO] Actualizar capas (vacío)
+        if (this.stageLayer) this.stageLayer.requestUpdate();
     }
 
     update(time, delta) {
@@ -173,7 +187,7 @@ export default class StageMode {
     }
 
     destroy() {
-        if (this.editControls) { this.editControls.destroy(); this.editControls = null; } // Limpiar controles
+        if (this.editControls) { this.editControls.destroy(); this.editControls = null; }
         if (this.shortCuts) { this.shortCuts.destroy(); this.shortCuts = null; }
         if (this.actionHistory) { this.actionHistory.clear(); this.actionHistory = null; }
         if (this.boundingBoxes) { this.boundingBoxes.destroy(); this.boundingBoxes = null; }
@@ -182,6 +196,9 @@ export default class StageMode {
         if (this.charactersController) { this.charactersController.destroy(); this.charactersController = null; }
         if (this.imagesController) { this.imagesController.clear(); this.imagesController = null; }
         if (this.spriteController) { this.spriteController.clear(); this.spriteController = null; }
+
+        // [NUEVO] Destruir capas
+        if (this.stageLayer) { this.stageLayer.destroy(); this.stageLayer = null; }
 
         window.removeEventListener('editor-tab-switched', this.onTabSwitched);
         window.removeEventListener('editor-all-tabs-closed', this.onAllTabsClosed);

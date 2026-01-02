@@ -1,3 +1,4 @@
+
 /**
  * source/funkin/ui/editors/components/controllers/stageMode/LoadStage.js
  */
@@ -15,7 +16,8 @@ export default class LoadStage {
         }
 
         console.log(`[LoadStage] Procesando stage: ${stageName}`);
-        const flattenedItems = this._flattenStageData(jsonContent.stage);
+        // [CHANSELUR] Iniciamos la recursion sin grupo padre
+        const flattenedItems = this._flattenStageData(jsonContent.stage, null);
 
         if (this.imagesController) {
             this.imagesController.loadImages(stageName, flattenedItems);
@@ -32,34 +34,48 @@ export default class LoadStage {
         });
     }
 
-    _flattenStageData(items) {
+    // [CHANSELUR] Agregado parentGroup para pasar la herencia
+    _flattenStageData(items, parentGroup = null) {
         let result = [];
         items.forEach(item => {
             let content = item;
             let role = null;
+            let keyName = null; // Guardamos el nombre de la llave (ej: "Group")
 
             if (!item.type) {
                 const keys = Object.keys(item);
+                // [CHANSELUR] Agregue Group y group a la lista de roles conocidos
                 const knownRoles = ['player', 'boyfriend', 'bf', 'enemy', 'dad', 'opponent', 'playergf', 'gf', 'girlfriend', 'Group', 'group'];
                 let foundKey = knownRoles.find(k => item[k]);
                 if (!foundKey && keys.length === 1) foundKey = keys[0];
 
                 if (foundKey && item[foundKey]) {
                     role = foundKey;
+                    keyName = foundKey;
                     content = item[foundKey];
                 }
             }
 
             if (!content) return;
 
+            // [CHANSELUR] Detectar si es un grupo y procesar recursivamente
             if (content.type === 'group' && Array.isArray(content.children)) {
-                result = result.concat(this._flattenStageData(content.children));
+                // Usamos el nombre de la llave como nombre del grupo
+                const groupName = keyName || role || "Group";
+                // Recursion: concatenamos los hijos aplanados, pasando el nombre de este grupo
+                result = result.concat(this._flattenStageData(content.children, groupName));
             } else {
                 const processedItem = { ...content };
                 if (role && role.toLowerCase() !== 'group') {
                     processedItem._role = role;
                     if (!processedItem.type) processedItem.type = 'character';
                 }
+
+                // [CHANSELUR] AQUI ESTA LA MAGIA: Si viene de un padre, le pegamos la etiqueta
+                if (parentGroup) {
+                    processedItem.group = parentGroup;
+                }
+
                 result.push(processedItem);
             }
         });
@@ -102,14 +118,12 @@ export default class LoadStage {
     applyCharProperties(char, data, debugName, charController = null, internalKey = null) {
         if (!char) return;
 
-        // [CORRECCIÓN CRÍTICA] Soporte para Array de Escala
         if (typeof data.scale === 'number') {
             char.setScale(data.scale);
         } else if (Array.isArray(data.scale)) {
             char.setScale(data.scale[0], data.scale[1]);
         }
 
-        // Posición
         if (data.position && Array.isArray(data.position)) {
             const sW = char.width * char.scaleX;
             const sH = char.height * char.scaleY;
@@ -118,7 +132,6 @@ export default class LoadStage {
             char.setPosition(visualX, visualY);
         }
 
-        // Visuales
         if (data.visible !== undefined) char.setVisible(data.visible);
         if (data.opacity !== undefined) char.setAlpha(data.opacity);
         if (data.flip_x !== undefined) char.setFlipX(data.flip_x);
@@ -129,7 +142,6 @@ export default class LoadStage {
         if (typeof data.scrollFactor === 'number') char.setScrollFactor(data.scrollFactor);
         else if (Array.isArray(data.scrollFactor)) char.setScrollFactor(data.scrollFactor[0], data.scrollFactor[1]);
 
-        // Cámara
         if (charController && internalKey) {
             if (data.camera_Offset && Array.isArray(data.camera_Offset)) {
                 charController.setCameraOffset(internalKey, data.camera_Offset[0], data.camera_Offset[1]);
